@@ -53,7 +53,7 @@ Then edit `hosts/laptop/default.nix` for host-specific settings.
 
 ## Desktop environments
 
-`modules/nixos/desktop.nix` supports Plasma, Hyprland, COSMIC, and Sway. `oscar` enables all four so they are selectable from SDDM at login, with Plasma as the default session.
+`modules/nixos/desktop.nix` supports Plasma, COSMIC, and Sway. `oscar` enables all three so they are selectable from SDDM at login, with Plasma as the default session.
 
 Example host configuration:
 
@@ -62,7 +62,6 @@ custom.desktop = {
   defaultSession = "plasma";
   environments = {
     plasma = true;
-    hyprland = true;
     cosmic = true;
     sway = true;
   };

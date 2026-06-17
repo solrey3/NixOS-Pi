@@ -17,7 +17,6 @@ in
 
     environments = {
       plasma = lib.mkEnableOption "KDE Plasma 6" // { default = true; };
-      hyprland = lib.mkEnableOption "Hyprland";
       cosmic = lib.mkEnableOption "COSMIC";
       sway = lib.mkEnableOption "Sway";
     };
@@ -44,11 +43,6 @@ in
     };
 
     services.desktopManager.plasma6.enable = cfg.environments.plasma;
-
-    programs.hyprland = lib.mkIf cfg.environments.hyprland {
-      enable = true;
-      xwayland.enable = true;
-    };
 
     services.desktopManager.cosmic.enable = cfg.environments.cosmic;
 
