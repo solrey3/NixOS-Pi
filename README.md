@@ -25,12 +25,25 @@ modules/
       budchris.nix
 ```
 
-## Oscar
+## Hosts
 
-Build or switch this host with:
+Build or switch Oscar with:
 
 ```sh
 sudo nixos-rebuild switch --flake .#oscar
+```
+
+Build or switch Quebec with:
+
+```sh
+sudo nixos-rebuild switch --flake .#quebec
+```
+
+On Quebec, after installing NixOS and cloning this flake, replace the bootstrap hardware file with the generated hardware config before switching:
+
+```sh
+sudo nixos-generate-config --show-hardware-config > hosts/quebec/hardware-configuration.nix
+sudo nixos-rebuild switch --flake .#quebec
 ```
 
 ## Add another host
