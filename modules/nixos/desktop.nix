@@ -35,7 +35,11 @@ in
     # Unlock secret stores during graphical login so GNOME/libsecret apps,
     # KDE apps, Proton VPN, browsers, etc. do not show keyring prompts.
     services.gnome.gnome-keyring.enable = true;
-    environment.systemPackages = [ pkgs.seahorse ];
+    environment.systemPackages = with pkgs; [
+      nextcloud-client
+      obsidian
+      seahorse
+    ];
     security.pam.services = {
       login.enableGnomeKeyring = true;
       sddm.enableGnomeKeyring = true;
