@@ -1,4 +1,4 @@
-{ hostname, pkgs, ... }:
+{ hostname, lib, pkgs, ... }:
 
 {
   imports = [
@@ -14,6 +14,11 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+
+  # The generated hardware config references an encrypted swap mapper that is
+  # not opened at boot, causing systemd to wait for it and potentially drop to
+  # emergency mode. Disable it until encrypted swap is configured explicitly.
+  swapDevices = lib.mkForce [ ];
 
   # Framework 13 AMD AI 300: the legacy AMD ACP PDM driver exposes the
   # digital mic but records clipped/silent audio. Prefer the SOF ACP70 driver.

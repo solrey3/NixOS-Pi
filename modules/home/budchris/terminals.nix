@@ -46,7 +46,7 @@ in
     theme = dark:Adwaita Dark,light:Adwaita
     font-family = ${terminalFont}
     font-size = 10
-    gtk-titlebar = true
+    gtk-titlebar = false
     confirm-close-surface = false
     command = /run/current-system/sw/bin/bash
   '';
