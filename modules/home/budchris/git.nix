@@ -36,7 +36,7 @@
   programs.gh = {
     enable = true;
     settings = {
-      git_protocol = "ssh";
+      git_protocol = "https";
       prompt = "enabled";
       editor = "nvim";
     };

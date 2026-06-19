@@ -4,6 +4,7 @@
     ./bash.nix
     ./browsers.nix
     ./cli-tools.nix
+    ./desktop-apps.nix
     ./docker.nix
     ./editors.nix
     ./fonts.nix
