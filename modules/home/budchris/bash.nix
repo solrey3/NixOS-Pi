@@ -15,6 +15,12 @@
     ];
 
     initExtra = ''
+      # Some remote hosts do not have Ghostty's xterm-ghostty terminfo entry.
+      # Downgrade to a universally available TERM before commands like ssh/tmux.
+      if [[ "$TERM" == "xterm-ghostty" ]]; then
+        export TERM=xterm-256color
+      fi
+
       # Up/down arrows search history using the current input as a prefix.
       # Bind both common cursor-key encodings:
       #   \e[A / \e[B = normal cursor mode
