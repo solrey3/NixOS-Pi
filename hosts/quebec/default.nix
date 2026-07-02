@@ -6,6 +6,7 @@
     ../../modules/nixos/1password.nix
     ../../modules/nixos/desktop.nix
     ../../modules/nixos/docker.nix
+    ../../modules/nixos/laptop.nix
     ../../modules/nixos/users/budchris.nix
     ../../modules/nixos/vpn.nix
   ];
@@ -27,7 +28,6 @@
 
   hardware.alsa.enablePersistence = true;
   hardware.firmware = [ pkgs.sof-firmware ];
-
   custom.desktop = {
     defaultSession = "plasma";
     environments = {

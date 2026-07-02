@@ -29,7 +29,6 @@
   swapDevices =
     [ { device = "/dev/mapper/luks-1b6dba1b-4b4a-409f-9d42-ada81e59e176"; }
     ];
-
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

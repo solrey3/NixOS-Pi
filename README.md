@@ -25,13 +25,31 @@ modules/
       budchris.nix
 ```
 
-## Oscar
+## Hosts
 
-Build or switch this host with:
+Build or switch Oscar with:
 
 ```sh
 sudo nixos-rebuild switch --flake .#oscar
 ```
+
+Build or switch Quebec with:
+
+```sh
+sudo nixos-rebuild switch --flake .#quebec
+```
+
+On Quebec, after installing NixOS, use a temporary shell with Git to clone this flake, replace the bootstrap hardware file with the generated hardware config, then switch:
+
+```sh
+nix-shell -p git
+git clone <repo-url>
+cd <repo-dir>
+sudo nixos-generate-config --show-hardware-config > hosts/quebec/hardware-configuration.nix
+sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .#quebec
+```
+
+The `NIX_CONFIG` prefix is only needed for the first flake-based switch if the installer system does not already have flakes enabled. This repo enables flakes permanently after the switch.
 
 ## Add another host
 
