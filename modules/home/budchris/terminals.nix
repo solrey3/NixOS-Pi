@@ -13,8 +13,14 @@ in
   home.packages = with pkgs; [
     alacritty
     ghostty
+    ghostty.terminfo
     xdg-terminal-exec
   ];
+
+  # Put Ghostty's terminfo in ncurses' default per-user lookup path too.
+  # This keeps tmux working even in shells that do not have Home Manager's
+  # TERMINFO/TERMINFO_DIRS session variables loaded yet.
+  home.file.".terminfo/x/xterm-ghostty".source = "${pkgs.ghostty.terminfo}/share/terminfo/x/xterm-ghostty";
 
   # Used by xdg-terminal-exec. The first available terminal is preferred.
   xdg.configFile."xdg-terminals.list".text = ''
@@ -48,6 +54,9 @@ in
     font-size = 10
     gtk-titlebar = true
     confirm-close-surface = false
+    # Use a widely available TERM so tmux also works on remote hosts that do
+    # not have Ghostty's xterm-ghostty terminfo installed.
+    term = xterm-256color
     command = /run/current-system/sw/bin/bash
   '';
 
