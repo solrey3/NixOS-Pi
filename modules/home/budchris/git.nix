@@ -11,7 +11,7 @@
 
     settings = {
       user = {
-        email = "solrey3@solrey3.com";
+        email = "solrey3@duck.com";
         name = "Solito Reyes III";
       };
 
