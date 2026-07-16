@@ -25,13 +25,13 @@
   services.fstrim.enable = true;
 
   fileSystems."/mnt/files1" = {
-    device = "/dev/sdb1";
+    device = "/dev/disk/by-uuid/7a94cb85-8e89-4192-91f4-e5aa93ac9757";
     fsType = "auto";
     options = [ "nofail" "x-systemd.device-timeout=10s" ];
   };
 
   fileSystems."/mnt/files2" = {
-    device = "/dev/sda2";
+    device = "/dev/disk/by-uuid/26B66CBAB66C8BDD";
     fsType = "auto";
     options = [ "nofail" "x-systemd.device-timeout=10s" ];
   };
