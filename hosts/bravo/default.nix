@@ -24,11 +24,24 @@
   services.fwupd.enable = true;
   services.fstrim.enable = true;
 
+  fileSystems."/mnt/files1" = {
+    device = "/dev/sdb1";
+    fsType = "auto";
+    options = [ "nofail" "x-systemd.device-timeout=10s" ];
+  };
+
+  fileSystems."/mnt/files2" = {
+    device = "/dev/sda2";
+    fsType = "auto";
+    options = [ "nofail" "x-systemd.device-timeout=10s" ];
+  };
+
   # NVIDIA GeForce RTX 3070.
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
   hardware.nvidia = {
     modesetting.enable = true;
+    powerManagement.enable = true;
     nvidiaSettings = true;
     open = false;
     package = pkgs.linuxPackages.nvidiaPackages.stable;
@@ -58,7 +71,19 @@
   environment.systemPackages = with pkgs; [
     pavucontrol
     pi-coding-agent
+    synology-drive-client
   ];
+
+  home-manager.users.budchris = { pkgs, ... }: {
+    xdg.configFile."autostart/synology-drive.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Synology Drive Client
+      Exec=${pkgs.synology-drive-client}/bin/synology-drive
+      Terminal=false
+      X-GNOME-Autostart-enabled=true
+    '';
+  };
 
   # Change this only after reading the NixOS release notes.
   system.stateVersion = "25.11";
