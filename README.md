@@ -27,6 +27,8 @@ modules/
 
 ## Hosts
 
+For first-time setup after a plain NixOS install, see [docs/initial-flake-setup.md](docs/initial-flake-setup.md).
+
 Build or switch Oscar with:
 
 ```sh
