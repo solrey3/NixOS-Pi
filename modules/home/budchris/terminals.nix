@@ -49,7 +49,7 @@ in
     (builtins.readFile "${pkgs.sway-unwrapped}/etc/sway/config");
 
   xdg.configFile."ghostty/config".text = ''
-    theme = dark:Adwaita Dark,light:Adwaita
+    theme = Adwaita Dark
     font-family = ${terminalFont}
     font-size = 10
     gtk-titlebar = false
