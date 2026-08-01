@@ -143,6 +143,23 @@ LazyVim/lazy.nvim will install plugins on first launch.
 - `TERMINAL=ghostty`
 - `xdg-terminal-exec` configured with Ghostty first, Alacritty second
 
+## Bravo media services
+
+Bravo runs Jellyfin, Navidrome, and SABnzbd on the local network. Jellyfin reads media from the mounted data drives and uses the NVIDIA GPU for transcoding. Navidrome reads music and playlists from `/mnt/archive`.
+
+Before enabling SABnzbd for the first time, create its Newsgroup Ninja credential files outside the Nix store:
+
+```sh
+sudo install -d -m 0700 -o sabnzbd -g sabnzbd /var/lib/sabnzbd/secrets
+read -r -p 'Newsgroup Ninja username: ' ninja_user
+read -r -s -p 'Newsgroup Ninja password: ' ninja_password; echo
+printf '%s' "$ninja_user" | sudo install -m 0400 -o sabnzbd -g sabnzbd /dev/stdin /var/lib/sabnzbd/secrets/newsgroup_ninja_username
+printf '%s' "$ninja_password" | sudo install -m 0400 -o sabnzbd -g sabnzbd /dev/stdin /var/lib/sabnzbd/secrets/newsgroup_ninja_password
+unset ninja_user ninja_password
+```
+
+`reorganize_tv_for_jellyfin.py` can migrate top-level TV release folders into Jellyfin's `Series/Season NN` layout. It performs a dry run unless passed `--apply`.
+
 ## Format
 
 ```sh

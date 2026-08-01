@@ -6,6 +6,9 @@
     ../../modules/nixos/1password.nix
     ../../modules/nixos/desktop.nix
     ../../modules/nixos/docker.nix
+    ../../modules/nixos/jellyfin.nix
+    ../../modules/nixos/navidrome.nix
+    ../../modules/nixos/sabnzbd.nix
     ../../modules/nixos/users/budchris.nix
     ../../modules/nixos/vpn.nix
   ];
@@ -34,6 +37,18 @@
     device = "/dev/disk/by-uuid/26B66CBAB66C8BDD";
     fsType = "auto";
     options = [ "nofail" "x-systemd.device-timeout=10s" ];
+  };
+
+  fileSystems."/mnt/archive" = {
+    device = "/dev/disk/by-uuid/7AFA-F0B4";
+    fsType = "exfat";
+    options = [
+      "nofail"
+      "x-systemd.device-timeout=10s"
+      "uid=budchris"
+      "gid=users"
+      "umask=022"
+    ];
   };
 
   # NVIDIA GeForce RTX 3070.
