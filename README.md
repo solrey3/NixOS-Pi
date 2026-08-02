@@ -143,6 +143,10 @@ LazyVim/lazy.nvim will install plugins on first launch.
 - `TERMINAL=ghostty`
 - `xdg-terminal-exec` configured with Ghostty first, Alacritty second
 
+## Beelink Kubernetes cluster
+
+`kilo`, `lima`, and `mike` form a three-control-plane k3s cluster. The bootstrap manifests deploy Jellyfin, Navidrome, and Pi-hole. See [docs/k3s-cluster.md](docs/k3s-cluster.md) for hardware-config replacement, cluster bootstrap, token transfer, storage, and DNS setup.
+
 ## Bravo media services
 
 Bravo runs Jellyfin, Navidrome, and SABnzbd on the local network. Jellyfin reads media from the mounted data drives and uses the NVIDIA GPU for transcoding. Navidrome reads music and playlists from `/mnt/archive`.
