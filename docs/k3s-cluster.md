@@ -23,7 +23,7 @@ custom.k3sCluster.serverAddress = "https://192.168.1.10:6443";
 
 Also replace `kilo.local` in the `--tls-san` flag in `modules/nixos/k3s-cluster.nix`, or add the IP as another TLS SAN.
 
-Mount the media library at `/srv/media` on `kilo`, with music under `/srv/media/music`. The module creates empty directories as a safe default; use an NFS/CIFS `fileSystems` entry if the media is on a NAS.
+The cluster mounts NFS exports from the NAS at hostname `illmatic` on every node. Ensure that name resolves from all three hosts and that the NAS exports `/Jukebox`, `/Movies`, `/TV`, and `/Sports` to them. Navidrome receives `/Jukebox`; Jellyfin receives all four paths read-only. The host mount points are under `/mnt/illmatic`.
 
 ## 2. Bootstrap kilo
 

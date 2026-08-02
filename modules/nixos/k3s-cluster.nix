@@ -85,11 +85,30 @@ in
     users.groups.k3s = { };
     users.users.budchris.extraGroups = [ "k3s" ];
 
-    # The initial media workloads use this host path and are pinned to kilo.
-    # Mount shared/NAS media here before removing that node selector.
-    systemd.tmpfiles.rules = [
-      "d /srv/media 0755 root root -"
-      "d /srv/media/music 0755 root root -"
-    ];
+    # Make illmatic's media available on every node so the workloads can move
+    # once their application-data PVCs use shared or replicated storage.
+    boot.supportedFilesystems = [ "nfs" ];
+    fileSystems = {
+      "/mnt/illmatic/Jukebox" = {
+        device = "illmatic:/Jukebox";
+        fsType = "nfs";
+        options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
+      };
+      "/mnt/illmatic/Movies" = {
+        device = "illmatic:/Movies";
+        fsType = "nfs";
+        options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
+      };
+      "/mnt/illmatic/TV" = {
+        device = "illmatic:/TV";
+        fsType = "nfs";
+        options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
+      };
+      "/mnt/illmatic/Sports" = {
+        device = "illmatic:/Sports";
+        fsType = "nfs";
+        options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
+      };
+    };
   };
 }

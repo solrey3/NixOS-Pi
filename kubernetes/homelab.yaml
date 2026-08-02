@@ -44,8 +44,17 @@ spec:
               mountPath: /config
             - name: cache
               mountPath: /cache
-            - name: media
-              mountPath: /media
+            - name: jukebox
+              mountPath: /Jukebox
+              readOnly: true
+            - name: movies
+              mountPath: /Movies
+              readOnly: true
+            - name: tv
+              mountPath: /TV
+              readOnly: true
+            - name: sports
+              mountPath: /Sports
               readOnly: true
             - name: dri
               mountPath: /dev/dri
@@ -67,9 +76,21 @@ spec:
             claimName: jellyfin-config
         - name: cache
           emptyDir: {}
-        - name: media
+        - name: jukebox
           hostPath:
-            path: /srv/media
+            path: /mnt/illmatic/Jukebox
+            type: Directory
+        - name: movies
+          hostPath:
+            path: /mnt/illmatic/Movies
+            type: Directory
+        - name: tv
+          hostPath:
+            path: /mnt/illmatic/TV
+            type: Directory
+        - name: sports
+          hostPath:
+            path: /mnt/illmatic/Sports
             type: Directory
         - name: dri
           hostPath:
@@ -125,7 +146,7 @@ spec:
           image: docker.io/deluan/navidrome:0.55.2
           env:
             - name: ND_MUSICFOLDER
-              value: /music
+              value: /Jukebox
             - name: ND_DATAFOLDER
               value: /data
             - name: ND_ENABLEINSIGHTSCOLLECTOR
@@ -137,7 +158,7 @@ spec:
             - name: data
               mountPath: /data
             - name: music
-              mountPath: /music
+              mountPath: /Jukebox
               readOnly: true
           readinessProbe:
             httpGet:
@@ -157,7 +178,7 @@ spec:
             claimName: navidrome-data
         - name: music
           hostPath:
-            path: /srv/media/music
+            path: /mnt/illmatic/Jukebox
             type: Directory
 ---
 apiVersion: v1
