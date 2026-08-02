@@ -7,8 +7,8 @@
     configFile = null;
     allowConfigWrite = true;
     secretValues = {
-      "@newsgroup_ninja_username@" = "/var/lib/sabnzbd/secrets/newsgroup_ninja_username";
-      "@newsgroup_ninja_password@" = "/var/lib/sabnzbd/secrets/newsgroup_ninja_password";
+      "@usenet_provider_username@" = "/var/lib/sabnzbd/secrets/usenet_provider_username";
+      "@usenet_provider_password@" = "/var/lib/sabnzbd/secrets/usenet_provider_password";
     };
 
     settings = {
@@ -30,8 +30,8 @@
         port = 563;
         connections = 50;
         retention = 6553;
-        username = "@newsgroup_ninja_username@";
-        password = "@newsgroup_ninja_password@";
+        username = "@usenet_provider_username@";
+        password = "@usenet_provider_password@";
         ssl = true;
         ssl_verify = "strict";
         enable = true;
