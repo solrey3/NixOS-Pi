@@ -103,7 +103,7 @@ Sway is configured to behave more like COSMIC/Plasma:
 - 3-finger tap for middle click
 - tap-and-drag
 - clickfinger right/middle click
-- natural two-finger scrolling
+- traditional two-finger scrolling
 - taps stay enabled immediately after typing
 - click-to-focus instead of focus-follows-mouse
 - 3-finger left/right swipes switch workspaces

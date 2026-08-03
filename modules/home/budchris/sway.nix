@@ -48,7 +48,7 @@ output eDP-1 mode 2880x1920@120Hz scale 1.5
 
 ### Desktop-like trackpad behavior
 # Match COSMIC/Plasma defaults more closely: tap-to-click, multi-finger tap
-# clicks, natural two-finger scrolling, clickfinger right/middle click, and
+# clicks, traditional two-finger scrolling, clickfinger right/middle click, and
 # click-to-focus instead of focusing windows just by brushing the trackpad.
 input type:touchpad {
     tap enabled
@@ -60,7 +60,7 @@ input type:touchpad {
     # Keep taps responsive even immediately after typing/using the pointing stick.
     dwt disabled
     dwtp disabled
-    natural_scroll enabled
+    natural_scroll disabled
     scroll_method two_finger
     click_method clickfinger
     middle_emulation enabled
