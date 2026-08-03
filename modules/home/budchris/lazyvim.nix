@@ -1,10 +1,38 @@
 { inputs, pkgs, ... }:
 
 let
+  copilotLibraryPath = pkgs.lib.makeLibraryPath (with pkgs; [
+    glib
+    libei
+    libjpeg
+    libpng
+    libsecret
+    pipewire
+    stdenv.cc.cc.lib
+    libx11
+    libxtst
+  ]);
+
   nvimConfig = pkgs.runCommand "budchris-nvim-config" { } ''
     cp -r ${inputs.lazyvim-starter} $out
     chmod -R u+w $out
     mkdir -p $out/lua/plugins
+
+    cat > $out/lua/plugins/copilot-native-libs.lua <<'EOF'
+    -- The native modules bundled with LazyVim's copilot.lua need these
+    -- shared libraries on NixOS (notably libsecret for @github/keytar).
+    local copilot_library_path = "${copilotLibraryPath}"
+
+    return {
+      {
+        "zbirenbaum/copilot.lua",
+        init = function()
+          vim.env.LD_LIBRARY_PATH = vim.env.LD_LIBRARY_PATH and (copilot_library_path .. ":" .. vim.env.LD_LIBRARY_PATH)
+            or copilot_library_path
+        end,
+      },
+    }
+    EOF
 
     cat > $out/lua/plugins/markdown.lua <<'EOF'
     -- Use Nixpkgs' marksman. Mason's downloaded marksman is a generic
@@ -29,6 +57,7 @@ in
   home.sessionVariables = {
     EDITOR = "nvim";
     VISUAL = "nvim";
+    LD_LIBRARY_PATH = copilotLibraryPath;
   };
 
   home.packages = with pkgs; [
