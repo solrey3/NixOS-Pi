@@ -1,6 +1,59 @@
 { pkgs, ... }:
 
 let
+  swayLaptopPowerProfile = pkgs.writeShellScript "sway-laptop-power-profile" ''
+    set -eu
+
+    has_battery() {
+      compgen -G /sys/class/power_supply/BAT* >/dev/null
+    }
+
+    on_ac_power() {
+      for supply in /sys/class/power_supply/*; do
+        [ -r "$supply/type" ] || continue
+        [ -r "$supply/online" ] || continue
+        case "$(cat "$supply/type")" in
+          Mains|USB|USB_C|USB_PD)
+            [ "$(cat "$supply/online")" = "1" ] && return 0
+            ;;
+        esac
+      done
+      return 1
+    }
+
+    set_profile() {
+      current="$(${pkgs.power-profiles-daemon}/bin/powerprofilesctl get 2>/dev/null || true)"
+      [ "$current" = "$1" ] || ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set "$1" || true
+    }
+
+    apply_profile() {
+      has_battery || exit 0
+      if on_ac_power; then
+        set_profile balanced
+      else
+        set_profile power-saver
+      fi
+    }
+
+    apply_profile
+    [ "''${1:-}" = "--watch" ] || exit 0
+
+    while sleep 30; do
+      apply_profile
+    done
+  '';
+
+  swayPowerProfileCycle = pkgs.writeShellScript "sway-power-profile-cycle" ''
+    set -eu
+    current="$(${pkgs.power-profiles-daemon}/bin/powerprofilesctl get 2>/dev/null || echo balanced)"
+    case "$current" in
+      power-saver) next=balanced ;;
+      balanced) next=performance ;;
+      *) next=power-saver ;;
+    esac
+    ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set "$next"
+  '';
+
   swayStatusBar = ''
 bar {
     position top
@@ -21,6 +74,8 @@ bar {
 # Status bar and system tray. Waybar's tray hosts NetworkManager, Proton VPN,
 # Bluetooth, and other StatusNotifier/AppIndicator applications.
 exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x waybar || true; exec ${pkgs.waybar}/bin/waybar'
+exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x swayidle || true; exec ${pkgs.swayidle}/bin/swayidle -w timeout 300 "${pkgs.brightnessctl}/bin/brightnessctl -s set 10%" resume "${pkgs.brightnessctl}/bin/brightnessctl -r" timeout 600 "${pkgs.swaylock}/bin/swaylock -f -c 111111" timeout 900 "${pkgs.sway}/bin/swaymsg output * power off" resume "${pkgs.sway}/bin/swaymsg output * power on" timeout 1800 "${pkgs.systemd}/bin/systemctl suspend" before-sleep "${pkgs.swaylock}/bin/swaylock -f -c 111111" lock "${pkgs.swaylock}/bin/swaylock -f -c 111111"'
+exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -f "[s]way-laptop-power-profile" || true; exec ${swayLaptopPowerProfile} --watch'
 exec ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator
 exec ${pkgs.blueman}/bin/blueman-applet
 exec ${pkgs.proton-vpn}/bin/protonvpn-app --start-minimized
@@ -77,12 +132,26 @@ bindgesture swipe:3:right workspace prev
 bindgesture swipe:3:up exec $menu
 bindgesture swipe:3:down scratchpad show
 '';
+
+  swayLaptopKeys = ''
+
+### Laptop controls
+bindsym XF86MonBrightnessDown exec ${pkgs.brightnessctl}/bin/brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec ${pkgs.brightnessctl}/bin/brightnessctl set +5%
+bindsym XF86AudioMute exec ${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+bindsym XF86AudioLowerVolume exec ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+bindsym XF86AudioRaiseVolume exec ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+bindsym XF86AudioMicMute exec ${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+bindsym $mod+Ctrl+l exec ${pkgs.swaylock}/bin/swaylock -f -c 111111
+bindsym XF86Sleep exec ${pkgs.systemd}/bin/systemctl suspend
+'';
 in
 {
   home.packages = with pkgs; [
     blueman
     networkmanagerapplet
     proton-vpn
+    wdisplays
   ];
 
   xdg.configFile."sway/config".text = builtins.replaceStrings
@@ -92,7 +161,7 @@ in
       swayStatusBar
     ]
     [
-      "set $term ${pkgs.ghostty}/bin/ghostty${swayDisplay}${swayTrackpad}"
+      "set $term ${pkgs.ghostty}/bin/ghostty${swayDisplay}${swayTrackpad}${swayLaptopKeys}"
       swayKeyboardLogout
       swayAutostart
     ]
@@ -106,7 +175,7 @@ in
       "spacing": 8,
       "modules-left": ["sway/workspaces", "sway/mode"],
       "modules-center": ["clock"],
-      "modules-right": ["tray", "network", "bluetooth", "pulseaudio", "battery"],
+      "modules-right": ["tray", "network", "bluetooth", "pulseaudio", "power-profiles-daemon", "battery"],
       "tray": {
         "icon-size": 18,
         "spacing": 10
@@ -130,8 +199,24 @@ in
         "format-muted": "  muted",
         "on-click": "${pkgs.pavucontrol}/bin/pavucontrol"
       },
+      "power-profiles-daemon": {
+        "format": "{icon} {profile}",
+        "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+        "format-icons": {
+          "performance": "",
+          "balanced": "",
+          "power-saver": ""
+        },
+        "on-click": "${swayPowerProfileCycle}"
+      },
       "battery": {
         "format": "{capacity}% {icon}",
+        "format-charging": "{capacity}% 󰂄",
+        "format-plugged": "{capacity}% 󰚥",
+        "states": {
+          "warning": 30,
+          "critical": 15
+        },
         "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
       },
       "clock": {
@@ -179,6 +264,7 @@ in
     #bluetooth.disabled,
     #bluetooth.off,
     #pulseaudio.muted,
+    #power-profiles-daemon.power-saver,
     #battery.warning,
     #battery.critical {
       color: #ffcc66;
