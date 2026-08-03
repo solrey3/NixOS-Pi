@@ -23,6 +23,7 @@
   environment.systemPackages = with pkgs; [
     curl
     git
+    ghostty.terminfo
     vim
     wget
   ];
