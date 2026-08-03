@@ -15,11 +15,17 @@
     ];
 
     initExtra = ''
-      # Some remote hosts do not have Ghostty's xterm-ghostty terminfo entry.
-      # Downgrade to a universally available TERM before commands like ssh/tmux.
-      if [[ "$TERM" == "xterm-ghostty" ]]; then
-        export TERM=xterm-256color
-      fi
+      # Ghostty advertises TERM=xterm-ghostty. On machines without that
+      # terminfo entry, programs such as tmux fail with
+      # "missing or unsuitable terminal: xterm-ghostty". Fall back to the
+      # widely available xterm-256color entry when the current TERM is unknown.
+      case "''${TERM-}" in
+        xterm-ghostty|ghostty)
+          if ! { command -v infocmp >/dev/null 2>&1 && infocmp "$TERM" >/dev/null 2>&1; }; then
+            export TERM=xterm-256color
+          fi
+          ;;
+      esac
 
       # Up/down arrows search history using the current input as a prefix.
       # Bind both common cursor-key encodings:
