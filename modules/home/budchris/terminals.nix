@@ -43,11 +43,6 @@ in
     };
   };
 
-  xdg.configFile."sway/config".text = builtins.replaceStrings
-    [ "set $term foot" ]
-    [ "set $term ${pkgs.ghostty}/bin/ghostty" ]
-    (builtins.readFile "${pkgs.sway-unwrapped}/etc/sway/config");
-
   xdg.configFile."ghostty/config".text = ''
     theme = Adwaita Dark
     font-family = ${terminalFont}

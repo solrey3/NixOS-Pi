@@ -19,7 +19,8 @@ This flake installs the upstream default Sway config for `budchris`, with the te
 | `Super + d` | Open app launcher (`wmenu-run`) |
 | `Super + Shift + q` | Kill focused window |
 | `Super + Shift + c` | Reload Sway config |
-| `Super + Shift + e` | Exit Sway session, with confirmation |
+| `Super + Shift + e`, then `Enter` | Exit Sway session with keyboard confirmation |
+| `Super + Shift + e`, then `Escape` | Cancel logout confirmation |
 | `Super + Left Mouse` | Drag floating windows |
 | `Super + Right Mouse` | Resize floating windows |
 
@@ -93,22 +94,32 @@ This flake installs the upstream default Sway config for `budchris`, with the te
 | `XF86MonBrightnessUp` | Raise brightness 5% |
 | `Print` | Take a screenshot with `grim` |
 
+## Trackpad
+
+Sway is configured to behave more like COSMIC/Plasma:
+
+- tap-to-click
+- 2-finger tap for right click
+- 3-finger tap for middle click
+- tap-and-drag
+- clickfinger right/middle click
+- natural two-finger scrolling
+- taps stay enabled immediately after typing
+- click-to-focus instead of focus-follows-mouse
+- 3-finger left/right swipes switch workspaces
+- 3-finger up opens the launcher
+- 3-finger down shows the scratchpad
+
+## Display
+
+The built-in `eDP-1` panel uses native `2880x1920@120Hz` with `scale 1.5`, giving a `1920x1280` logical workspace.
+
 ## Config location
 
 The generated Sway config is managed in:
 
 ```text
-modules/home/budchris/terminals.nix
+modules/home/budchris/sway.nix
 ```
 
-It reads Sway's default config and replaces:
-
-```text
-set $term foot
-```
-
-with:
-
-```text
-set $term ghostty
-```
+It reads Sway's default config and replaces the default terminal with Ghostty, replaces the click-based logout prompt with a keyboard confirmation mode, adds the trackpad profile, and swaps swaybar for Waybar.

@@ -11,6 +11,7 @@
     ./git.nix
     ./lazyvim.nix
     ./starship.nix
+    ./sway.nix
     ./terminals.nix
   ];
 
