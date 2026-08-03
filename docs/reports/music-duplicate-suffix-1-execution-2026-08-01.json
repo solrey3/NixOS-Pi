@@ -1,6 +1,6 @@
 {
   "executed_at": "2026-08-01T16:31:10.272084",
-  "source_plan": "/home/budchris/NixOS/music-duplicate-suffix-1-plan-2026-08-01.json",
+  "source_plan": "/home/budchris/NixOS/docs/reports/music-duplicate-suffix-1-plan-2026-08-01.json",
   "operations": 522,
   "overwrites": 411,
   "suffix_removals": 111,
