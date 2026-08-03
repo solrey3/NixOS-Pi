@@ -13,22 +13,27 @@ let
     libxtst
   ]);
 
+  copilotNode = pkgs.writeShellScriptBin "copilot-node" ''
+    export LD_LIBRARY_PATH="${copilotLibraryPath}:''${LD_LIBRARY_PATH:-}"
+    exec ${pkgs.nodejs}/bin/node "$@"
+  '';
+
   nvimConfig = pkgs.runCommand "budchris-nvim-config" { } ''
     cp -r ${inputs.lazyvim-starter} $out
     chmod -R u+w $out
     mkdir -p $out/lua/plugins
 
     cat > $out/lua/plugins/copilot-native-libs.lua <<'EOF'
-    -- The native modules bundled with LazyVim's copilot.lua need these
-    -- shared libraries on NixOS (notably libsecret for @github/keytar).
-    local copilot_library_path = "${copilotLibraryPath}"
-
+    -- The native modules bundled with LazyVim's copilot.lua need shared
+    -- libraries on NixOS (notably libsecret for @github/keytar). Point
+    -- Copilot at a wrapped node so the LSP always starts with that library
+    -- path, independent of how Neovim was launched.
     return {
       {
         "zbirenbaum/copilot.lua",
-        init = function()
-          vim.env.LD_LIBRARY_PATH = vim.env.LD_LIBRARY_PATH and (copilot_library_path .. ":" .. vim.env.LD_LIBRARY_PATH)
-            or copilot_library_path
+        opts = function(_, opts)
+          opts.copilot_node_command = "${copilotNode}/bin/copilot-node"
+          return opts
         end,
       },
     }
@@ -57,12 +62,12 @@ in
   home.sessionVariables = {
     EDITOR = "nvim";
     VISUAL = "nvim";
-    LD_LIBRARY_PATH = copilotLibraryPath;
   };
 
   home.packages = with pkgs; [
     # LazyVim/runtime helpers
     gnumake
+    copilotNode
     marksman
     nodejs
     python3
