@@ -41,16 +41,6 @@ in
       "interface-name:veth*"
     ];
 
-    # Allows the default kilo.local endpoint to resolve on a normal home LAN.
-    services.avahi = {
-      enable = true;
-      nssmdns4 = true;
-      publish = {
-        enable = true;
-        addresses = true;
-      };
-    };
-
     services.k3s = {
       enable = true;
       role = if isServer then "server" else "agent";
