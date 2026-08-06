@@ -12,6 +12,16 @@
 
   networking.networkmanager.enable = true;
 
+  # Resolve <hostname>.local on the LAN via mDNS.
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    publish = {
+      enable = true;
+      addresses = true;
+    };
+  };
+
   services.openssh = {
     enable = true;
     settings = {
