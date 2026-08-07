@@ -80,22 +80,22 @@ in
     boot.supportedFilesystems = [ "nfs" ];
     fileSystems = {
       "/mnt/illmatic/Jukebox" = {
-        device = "illmatic:/Jukebox";
+        device = "illmatic:/volume1/Jukebox";
         fsType = "nfs";
         options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
       };
       "/mnt/illmatic/Movies" = {
-        device = "illmatic:/Movies";
+        device = "illmatic:/volume1/Movies";
         fsType = "nfs";
         options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
       };
       "/mnt/illmatic/TV" = {
-        device = "illmatic:/TV";
+        device = "illmatic:/volume1/TV";
         fsType = "nfs";
         options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
       };
       "/mnt/illmatic/Sports" = {
-        device = "illmatic:/Sports";
+        device = "illmatic:/volume1/Sports";
         fsType = "nfs";
         options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
       };
