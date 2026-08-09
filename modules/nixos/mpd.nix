@@ -14,16 +14,15 @@
 
   services.mpd = {
     enable = true;
-    musicDirectory = "/mnt/illmatic/Jukebox/Music";
+    openFirewall = true;
     # The NAS export squashes non-root callers to a user with no read
     # permission, so MPD must run as root to scan the library. Root can
     # still reach the desktop user's PipeWire socket (see below).
     user = "root";
-    network = {
-      listenAddress = "any";
-      port = 6600;
-    };
     settings = {
+      music_directory = "/mnt/illmatic/Jukebox/Music";
+      bind_to_address = "any";
+      port = 6600;
       audio_output = [
         {
           type = "pipewire";
@@ -55,6 +54,4 @@
       TimeoutStartSec = "30min";
     };
   };
-
-  networking.firewall.allowedTCPPorts = [ 6600 ];
 }

@@ -7,6 +7,7 @@ A modular, multi-host NixOS configuration for desktop and laptop systems, a medi
 ```text
 flake.nix                    Flake inputs and generated host outputs
 hosts/
+  alpha/                     Appliance music player and MPD server
   bravo/                     Desktop and media server
   oscar/                     Laptop/workstation
   quebec/                    Framework 13 laptop/workstation
@@ -33,7 +34,8 @@ Each host directory contains:
 
 | Host | Role | Main configuration |
 | --- | --- | --- |
-| `bravo` | NVIDIA desktop and media server | Plasma, COSMIC, Sway, Docker, VPN tools, Jellyfin, Navidrome, SABnzbd |
+| `alpha` | Appliance music player | i3/XFCE, MPD, NFS music library, Tailscale |
+| `bravo` | NVIDIA desktop and media server | Plasma, COSMIC, Sway, Docker, VPN tools, Jellyfin, Navidrome |
 | `oscar` | Laptop/workstation | Plasma, COSMIC, Sway, laptop power management, Docker, VPN tools |
 | `quebec` | Framework 13 AMD laptop/workstation | Plasma, COSMIC, Sway, laptop power/audio configuration, Docker, VPN tools |
 | `kilo` | k3s bootstrap server and worker | Initializes the embedded-etcd cluster and deploys homelab manifests |
@@ -120,32 +122,22 @@ Ghostty is the preferred terminal through `TERMINAL` and `xdg-terminal-exec`. La
 
 - Jellyfin
 - Navidrome
+- SABnzbd
 - Pi-hole
+- an nginx homelab homepage
 
-All nodes mount the NFS exports `/Jukebox`, `/Movies`, `/TV`, and `/Sports` from the NAS at hostname `illmatic`. Navidrome reads `/Jukebox`; Jellyfin receives all four exports read-only. Application PVCs initially use k3s local-path storage, and the stateful workloads are pinned to `kilo`.
+All nodes mount the NFS exports `/Jukebox`, `/Movies`, `/TV`, `/Downloads`, and `/Sports` from the NAS at hostname `illmatic`. Navidrome reads `/Jukebox`, Jellyfin receives the media exports read-only, and SABnzbd writes to `/Downloads`. Application PVCs initially use k3s local-path storage; Jellyfin, Navidrome, and Pi-hole are pinned to `kilo`.
 
 See [docs/k3s-cluster.md](docs/k3s-cluster.md) for hardware preparation, stable addressing, token transfer, NAS requirements, service access, and storage limitations.
 
 ## Bravo media services
 
-`bravo` runs native NixOS services for Jellyfin, Navidrome, and SABnzbd:
+`bravo` runs native NixOS services for Jellyfin and Navidrome:
 
 - Jellyfin reads the mounted media drives and uses the NVIDIA GPU for transcoding.
 - Navidrome reads music and playlists from `/mnt/archive`.
-- SABnzbd stores downloads under `/home/budchris/Downloads/sabnzbd`.
 
-Before enabling SABnzbd for the first time, create its Usenet provider credentials outside the Nix store:
-
-```sh
-sudo install -d -m 0700 -o sabnzbd -g sabnzbd /var/lib/sabnzbd/secrets
-read -r -p 'Usenet provider username: ' provider_user
-read -r -s -p 'Usenet provider password: ' provider_password; echo
-printf '%s' "$provider_user" | sudo install -m 0400 -o sabnzbd -g sabnzbd \
-  /dev/stdin /var/lib/sabnzbd/secrets/usenet_provider_username
-printf '%s' "$provider_password" | sudo install -m 0400 -o sabnzbd -g sabnzbd \
-  /dev/stdin /var/lib/sabnzbd/secrets/usenet_provider_password
-unset provider_user provider_password
-```
+SABnzbd runs in the k3s cluster and writes downloads to the NAS-backed `/mnt/illmatic/Downloads` mount. Configure its provider credentials through the SABnzbd web interface; do not commit them to this repository.
 
 `reorganize_tv_for_jellyfin.py` migrates top-level TV release folders into Jellyfin's `Series/Season NN` layout. It performs a dry run unless passed `--apply`.
 

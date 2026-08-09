@@ -27,9 +27,13 @@ If this machine already has a matching host in `hosts/`, use that host name.
 
 Existing hosts:
 
+- `alpha`
+- `bravo`
+- `kilo`
+- `lima`
+- `mike`
 - `oscar`
 - `quebec`
-- `bravo`
 
 If this is a new machine, create a new host from an existing one:
 

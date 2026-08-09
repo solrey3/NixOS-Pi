@@ -69,7 +69,7 @@ in
     environment.systemPackages = with pkgs; [
       kubectl
       k3s
-      helm
+      kubernetes-helm
     ];
 
     users.groups.k3s = { };
