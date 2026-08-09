@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# jellyfin-remote — control Jellyfin playback on remote clients from the shell.
+#
+# Config (required): ~/.config/jellyfin-remote/config
+#   JELLYFIN_SERVER=http://kilo.local:8096
+#   JELLYFIN_TOKEN=<api token>     # web client token or an API key
+#   JELLYFIN_USER=<user id>        # only needed for the "playlist" command
+#
+# Usage:
+#   jellyfin-remote sessions                # list controllable sessions
+#   jellyfin-remote now                     # what's playing
+#   jellyfin-remote next|prev|pause|play|stop   # transport controls
+#   jellyfin-remote play <search>           # play first matching playlist
+#   jellyfin-remote shuffle <search>        # play first matching playlist shuffled
+#
+# Transport/playback commands target the most recent session that supports
+# remote control (override with JELLYFIN_SESSION=<session id>).
+
+set -euo pipefail
+
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}/jellyfin-remote/config"
+[[ -f $CONF ]] && source "$CONF"
+
+: "${JELLYFIN_SERVER:?set JELLYFIN_SERVER in $CONF}"
+: "${JELLYFIN_TOKEN:?set JELLYFIN_TOKEN in $CONF}"
+
+api() { # api <method> <path>
+  curl -sf -X "$1" -H "X-Emby-Token: $JELLYFIN_TOKEN" "$JELLYFIN_SERVER$2"
+}
+
+session_id() {
+  if [[ -n ${JELLYFIN_SESSION:-} ]]; then
+    echo "$JELLYFIN_SESSION"; return
+  fi
+  api GET /Sessions | python3 -c '
+import json, sys
+sessions = [s for s in json.load(sys.stdin) if s.get("SupportsRemoteControl")]
+sessions.sort(key=lambda s: s.get("LastActivityDate", ""), reverse=True)
+print(sessions[0]["Id"] if sessions else "")' \
+    | grep . || { echo "error: no controllable session found" >&2; exit 1; }
+}
+
+cmd="${1:-help}"; shift || true
+
+case "$cmd" in
+  sessions)
+    api GET /Sessions | python3 -c '
+import json, sys
+for s in json.load(sys.stdin):
+    np = s.get("NowPlayingItem") or {}
+    flag = "*" if s.get("SupportsRemoteControl") else " "
+    print("{} {}  {:20} {:15} {}".format(flag, s["Id"], s["DeviceName"], s["Client"], np.get("Name", "")))'
+    ;;
+
+  now)
+    api GET /Sessions | python3 -c '
+import json, sys
+for s in json.load(sys.stdin):
+    np = s.get("NowPlayingItem")
+    if np:
+        artist = (np.get("Artists") or [""])[0]
+        print("{}: {} — {}".format(s["DeviceName"], np.get("Name"), artist))'
+    ;;
+
+  next|prev)
+    verb=$([[ $cmd == next ]] && echo NextTrack || echo PreviousTrack)
+    api POST "/Sessions/$(session_id)/Playing/$verb" >/dev/null
+    ;;
+
+  pause|play|stop)
+    verb=${cmd^}
+    api POST "/Sessions/$(session_id)/Playing/$verb" >/dev/null
+    ;;
+
+  play|shuffle)
+    : "${JELLYFIN_USER:?set JELLYFIN_USER in $CONF}"
+    search="${*:?usage: jellyfin-remote $cmd <playlist search term>}"
+    item=$(api GET "/Users/$JELLYFIN_USER/Items?searchTerm=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "$search")&IncludeItemTypes=Playlist&Recursive=true&Limit=1" \
+      | python3 -c 'import json,sys; items=json.load(sys.stdin)["Items"]; print(items[0]["Id"] if items else "")' \
+      | grep .) || { echo "error: no playlist matching '$search'" >&2; exit 1; }
+    playcmd=$([[ $cmd == shuffle ]] && echo PlayShuffle || echo PlayNow)
+    api POST "/Sessions/$(session_id)/Playing?PlayCommand=$playcmd&ItemIds=$item" >/dev/null
+    sleep 2
+    "$0" now
+    ;;
+
+  *)
+    sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+esac
