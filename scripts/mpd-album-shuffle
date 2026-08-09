@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""mpd-album-shuffle — play an MPD playlist album-shuffled.
+
+Random album order; tracks play in disc/track order within each album.
+
+Usage: mpd-album-shuffle <playlist> [host] [port]
+Defaults: host $MPD_HOST or alpha.local, port $MPD_PORT or 6600.
+
+Note: only tracks already in the MPD database are queued. Run an update
+(e.g. 'mpc update' or from rmpc) after adding music to the NAS.
+"""
+import random
+import socket
+import sys
+
+PLAYLIST = sys.argv[1] if len(sys.argv) > 1 else "Five Star"
+HOST = sys.argv[2] if len(sys.argv) > 2 else "alpha.local"
+PORT = int(sys.argv[3]) if len(sys.argv) > 3 else 6600
+
+
+def mpd(cmds):
+    """Send commands; read each response until its OK/ACK terminator.
+
+    (Sending 'close' right after a command makes MPD drop a large
+    response mid-stream, so each command is read to completion.)
+    """
+    sock = socket.create_connection((HOST, PORT), timeout=120)
+    f = sock.makefile("rw", encoding="utf-8", newline="\n")
+    f.readline()  # greeting
+    lines = []
+    for c in cmds:
+        f.write(c + "\n")
+        f.flush()
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            line = line.rstrip("\n")
+            if line == "OK" or line.startswith("ACK"):
+                break
+            lines.append(line)
+    sock.close()
+    return lines
+
+
+def parse_tracks(lines):
+    tracks, cur = [], {}
+    for line in lines:
+        key, _, val = line.partition(": ")
+        if key == "file":
+            if cur:
+                tracks.append(cur)
+            cur = {"file": val}
+        else:
+            cur.setdefault(key, val)
+    if cur:
+        tracks.append(cur)
+    return tracks
+
+
+def sort_key(t):
+    def num(v):
+        try:
+            return int(str(v).split("/")[0])
+        except (TypeError, ValueError):
+            return 0
+    return (num(t.get("Disc")), num(t.get("Track")), t["file"])
+
+
+def main():
+    # Load the stored playlist into the queue (only in-DB tracks resolve),
+    # then fetch the queue with tags.
+    mpd(["clear", f'load "{PLAYLIST}"'])
+    tracks = parse_tracks(mpd(["playlistinfo"]))
+    if not tracks:
+        sys.exit(f"error: playlist '{PLAYLIST}' is empty or not in the database")
+
+    # Group by album, preserving disc/track order within each album.
+    albums, order = {}, []
+    for t in tracks:
+        key = (t.get("AlbumArtist") or t.get("Artist", ""), t.get("Album", ""))
+        if key not in albums:
+            albums[key] = []
+            order.append(key)
+        albums[key].append(t)
+
+    groups = [sorted(albums[k], key=sort_key) for k in order]
+    random.shuffle(groups)
+
+    cmds = ["clear", "random 0"]
+    for g in groups:
+        for t in g:
+            cmds.append('add "{}"'.format(t["file"].replace('"', '\\"')))
+    mpd(cmds)
+    mpd(["play 0"])
+    print(f"queued {sum(len(g) for g in groups)} tracks / {len(groups)} albums, album-shuffled")
+
+
+if __name__ == "__main__":
+    main()
