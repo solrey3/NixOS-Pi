@@ -13,7 +13,7 @@
 
   services.mpd = {
     enable = true;
-    musicDirectory = "/mnt/illmatic/Jukebox";
+    musicDirectory = "/mnt/illmatic/Jukebox/Music";
     # The NAS export squashes non-root callers to a user with no read
     # permission, so MPD must run as root to scan the library. Root can
     # still reach the desktop user's PipeWire socket (see below).
