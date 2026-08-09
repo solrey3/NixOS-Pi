@@ -4,6 +4,8 @@ let
   cfg = config.custom.desktop;
 in
 {
+  imports = [ ./firefox.nix ];
+
   options.custom.desktop = {
     enable = lib.mkEnableOption "desktop environments" // {
       default = true;
@@ -84,8 +86,6 @@ in
     };
 
     xdg.portal.enable = true;
-
-    programs.firefox.enable = true;
 
     programs.steam = {
       enable = true;

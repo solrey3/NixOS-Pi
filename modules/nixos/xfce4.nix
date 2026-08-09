@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 {
+  imports = [ ./firefox.nix ];
+
   services.xserver = {
     enable = true;
 
@@ -50,8 +52,6 @@
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
-  programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
     networkmanagerapplet
