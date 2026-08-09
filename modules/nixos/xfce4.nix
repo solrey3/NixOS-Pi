@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 {
+  imports = [ ./firefox.nix ];
+
   services.xserver = {
     enable = true;
 
@@ -27,7 +29,7 @@
     };
   };
 
-  services.displayManager.defaultSession = "xfce+i3";
+  services.displayManager.defaultSession = "none+i3";
 
   services.gnome.gnome-keyring.enable = true;
   security.pam.services = {
@@ -50,8 +52,6 @@
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
-  programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
     networkmanagerapplet
