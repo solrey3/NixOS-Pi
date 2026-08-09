@@ -28,15 +28,12 @@
   };
 
   networking.firewall = {
-    # Barrier/Input Leap screen sharing port.
-    allowedTCPPorts = [ 24800 ];
     allowedUDPPorts = [ 41641 ];
     trustedInterfaces = [ "tailscale0" ];
     checkReversePath = "loose";
   };
 
   environment.systemPackages = with pkgs; [
-    input-leap
     pavucontrol
     tailscale
   ];
