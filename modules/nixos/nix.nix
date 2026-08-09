@@ -5,6 +5,8 @@
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
       auto-optimise-store = true;
+      # Allow remote deployments (nixos-rebuild --target-host) from budchris.
+      trusted-users = [ "budchris" ];
     };
 
     gc = {
