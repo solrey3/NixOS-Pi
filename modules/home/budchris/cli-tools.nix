@@ -45,6 +45,9 @@
     p7zip
     rsync
 
+    # Music
+    rmpc # MPD client (connects to alpha.local:6600)
+
     # Fun terminal tools
     figlet
     fortune
@@ -55,6 +58,14 @@
     openssl
     gcc
   ];
+
+  # rmpc talks to the MPD server on alpha (the audio system).
+  xdg.configFile."rmpc/config.ron".text = ''
+    #![enable(implicit_some)]
+    (
+        address: "alpha.local:6600",
+    )
+  '';
 
   programs.fzf = {
     enable = true;

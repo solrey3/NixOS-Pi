@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/nixos/docker.nix
+    ../../modules/nixos/mpd.nix
     ../../modules/nixos/nvidia-legacy_470.nix
     ../../modules/nixos/users/budchris.nix
     ../../modules/nixos/xfce4.nix
