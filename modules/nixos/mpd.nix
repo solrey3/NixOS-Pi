@@ -8,7 +8,8 @@
   fileSystems."/mnt/illmatic/Jukebox" = {
     device = "illmatic:/volume1/Jukebox";
     fsType = "nfs";
-    options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
+    # No idle-timeout: unmounting/remounting mid-playback caused stalls.
+    options = [ "_netdev" "nofail" "x-systemd.automount" ];
   };
 
   services.mpd = {
@@ -34,6 +35,10 @@
       # update from rmpc) after adding music to the NAS.
       auto_update = "no";
       zeroconf_enabled = "no";
+      # Large buffer to ride out NFS latency spikes (audible dropouts
+      # otherwise: "Hit end of (available) data during resync").
+      audio_buffer_size = 32768; # KiB
+      buffer_before_play = "25%";
       follow_outside_symlinks = "yes";
       follow_inside_symlinks = "yes";
     };
