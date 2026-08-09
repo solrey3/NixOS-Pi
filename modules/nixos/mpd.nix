@@ -14,9 +14,10 @@
   services.mpd = {
     enable = true;
     musicDirectory = "/mnt/illmatic/Jukebox";
-    # Run as the logged-in user so MPD can hand audio to the user's
-    # PipeWire session (analog sink on the receiver).
-    user = "budchris";
+    # The NAS export squashes non-root callers to a user with no read
+    # permission, so MPD must run as root to scan the library. Root can
+    # still reach the desktop user's PipeWire socket (see below).
+    user = "root";
     network = {
       listenAddress = "any";
       port = 6600;
