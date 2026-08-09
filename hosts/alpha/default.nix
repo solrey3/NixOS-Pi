@@ -23,6 +23,13 @@
   services.fwupd.enable = true;
   services.fstrim.enable = true;
 
+  # Alpha is an appliance music player: log straight into the desktop so
+  # PipeWire/WirePlumber are always available for MPD's audio output.
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "budchris";
+  };
+
   # Alpha doubles as a music player: never suspend when the display
   # turns off or after idle time, so audio playback keeps going.
   systemd.targets = {

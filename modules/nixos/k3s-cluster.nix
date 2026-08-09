@@ -94,6 +94,11 @@ in
         fsType = "nfs";
         options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
       };
+      "/mnt/illmatic/Downloads" = {
+        device = "illmatic:/volume1/Downloads";
+        fsType = "nfs";
+        options = [ "_netdev" "nofail" "x-systemd.automount" "x-systemd.idle-timeout=10min" ];
+      };
       "/mnt/illmatic/Sports" = {
         device = "illmatic:/volume1/Sports";
         fsType = "nfs";

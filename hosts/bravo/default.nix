@@ -8,7 +8,6 @@
     ../../modules/nixos/docker.nix
     ../../modules/nixos/jellyfin.nix
     ../../modules/nixos/navidrome.nix
-    ../../modules/nixos/sabnzbd.nix
     ../../modules/nixos/users/budchris.nix
     ../../modules/nixos/vpn.nix
   ];

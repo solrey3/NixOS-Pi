@@ -196,6 +196,183 @@ spec:
       targetPort: http
 ---
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sabnzbd-config
+  namespace: media
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sabnzbd
+  template:
+    metadata:
+      labels:
+        app: sabnzbd
+    spec:
+      containers:
+        - name: sabnzbd
+          image: lscr.io/linuxserver/sabnzbd:4.5.5
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "100"
+            - name: TZ
+              value: America/New_York
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 2Gi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sabnzbd-config
+        - name: downloads
+          hostPath:
+            path: /mnt/illmatic/Downloads
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  type: LoadBalancer
+  selector:
+    app: sabnzbd
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-homepage
+  namespace: web
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Homelab</title>
+      <style>
+        body { font-family: system-ui, sans-serif; background: #1e1e2e; color: #cdd6f4;
+               display: flex; justify-content: center; padding: 4rem 1rem; margin: 0; }
+        main { width: 100%; max-width: 32rem; }
+        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+        a { display: block; background: #313244; color: #89b4fa; text-decoration: none;
+            padding: 1rem 1.25rem; border-radius: 0.5rem; margin-bottom: 0.75rem; }
+        a:hover { background: #45475a; }
+        a span { float: right; color: #6c7086; }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>Homelab</h1>
+        <a href="http://kilo.local:8096">Jellyfin <span>media</span></a>
+        <a href="http://kilo.local:4533">Navidrome <span>music</span></a>
+        <a href="http://kilo.local:8080">SABnzbd <span>usenet</span></a>
+        <a href="http://kilo.local:8080/admin">Pi-hole <span>dns</span></a>
+      </main>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: docker.io/library/nginx:1.29-alpine
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: homepage
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+      volumes:
+        - name: homepage
+          configMap:
+            name: nginx-homepage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: web
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   name: network
