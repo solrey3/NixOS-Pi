@@ -30,6 +30,7 @@
         }
       ];
       auto_update = "yes";
+      zeroconf_enabled = "no";
       follow_outside_symlinks = "yes";
       follow_inside_symlinks = "yes";
     };
@@ -39,7 +40,12 @@
   systemd.services.mpd = {
     after = [ "mnt-illmatic-Jukebox.automount" ];
     environment.XDG_RUNTIME_DIR = "/run/user/1000";
-    serviceConfig.SupplementaryGroups = [ "audio" "pipewire" ];
+    serviceConfig = {
+      SupplementaryGroups = [ "audio" "pipewire" ];
+      # The first run scans the whole Jukebox share over NFS, which can
+      # take a long time; don't let systemd kill it mid-scan.
+      TimeoutStartSec = "30min";
+    };
   };
 
   networking.firewall.allowedTCPPorts = [ 6600 ];
