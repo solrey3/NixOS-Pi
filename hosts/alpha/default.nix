@@ -70,6 +70,13 @@
     tailscale
   ];
 
+  # Alpha-specific home-manager settings (shared config lives in
+  # modules/home/budchris).
+  home-manager.users.budchris = { ... }: {
+    # Manage the i3 config declaratively (Super is the modifier).
+    xdg.configFile."i3/config".source = ./config/i3/config;
+  };
+
   # Change this only after reading the NixOS release notes.
   system.stateVersion = "24.05";
 }
