@@ -29,7 +29,10 @@
           name = "PipeWire";
         }
       ];
-      auto_update = "yes";
+      # inotify doesn't work over NFS anyway, and watching the whole tree
+      # slowed the initial scan to a crawl. Run "mpc update" (or send an
+      # update from rmpc) after adding music to the NAS.
+      auto_update = "no";
       zeroconf_enabled = "no";
       follow_outside_symlinks = "yes";
       follow_inside_symlinks = "yes";
