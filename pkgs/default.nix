@@ -8,4 +8,6 @@
 
 { pkgs }:
 
-{ }
+{
+  pi-console = pkgs.callPackage ./pi-console { };
+}
