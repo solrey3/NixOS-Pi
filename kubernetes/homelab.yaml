@@ -369,7 +369,8 @@ spec:
     app: nginx
   ports:
     - name: http
-      port: 80
+      # Port 80 on the nodes is already claimed by Traefik's ServiceLB.
+      port: 8082
       targetPort: http
 ---
 apiVersion: v1
