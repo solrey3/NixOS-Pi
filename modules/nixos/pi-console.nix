@@ -36,10 +36,10 @@ in
   ];
 
   environment.etc."pi-console/secrets.env.example".text = ''
-    # Copy to /var/lib/pi-console/secrets.env.tpl, change these 1Password
-    # references to match your vault, and chmod/chown it 0600 pi-console.
-    ANTHROPIC_API_KEY=op://Homelab/Anthropic/api-key
-    # OPENAI_API_KEY=op://Homelab/OpenAI/api-key
+    # Copy to /var/lib/pi-console/secrets.env.tpl, change this 1Password
+    # reference to match your vault, and chmod/chown it 0600 pi-console.
+    # openai-codex OAuth remains in the console user's auth.json.
+    OPENROUTER_API_KEY=op://Homelab/OpenRouter/api-key
   '';
 
   systemd.services.pi-console-repository = {
@@ -76,8 +76,14 @@ in
       PI_CONSOLE_STATE_DIR = "/var/lib/pi-console";
       PI_CONSOLE_CWD = "/srv/nixos";
       PI_CONSOLE_TARGETS = "tango,alpha,bravo,kilo,lima,mike,oscar,quebec";
+      PI_CONSOLE_PRIMARY_PROVIDER = "openai-codex";
+      PI_CONSOLE_PRIMARY_MODEL = "gpt-5.6-sol";
+      PI_CONSOLE_PRIMARY_THINKING = "medium";
+      PI_CONSOLE_BACKUP_PROVIDER = "openrouter";
+      PI_CONSOLE_BACKUP_MODEL = "moonshotai/kimi-k3";
+      PI_CONSOLE_BACKUP_THINKING = "medium";
     };
-    path = [ deploy pkgs.git pkgs.nix pkgs.openssh pkgs._1password-cli ];
+    path = [ deploy pkgs.git pkgs.nix pkgs.openssh pkgs._1password-cli pkgs.tailscale ];
     serviceConfig = {
       User = "pi-console";
       Group = "pi-console";

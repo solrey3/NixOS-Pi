@@ -1,7 +1,9 @@
 import http from "node:http";
 import { randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import {
   createAgentSession,
   DefaultResourceLoader,
@@ -15,8 +17,19 @@ const stateDir = process.env.PI_CONSOLE_STATE_DIR ?? "/var/lib/pi-console";
 const defaultCwd = process.env.PI_CONSOLE_CWD ?? "/srv/nixos";
 const publicDir = process.env.PI_CONSOLE_PUBLIC_DIR ?? path.resolve("public");
 const agentDir = process.env.PI_CONSOLE_AGENT_DIR ?? path.join(stateDir, ".pi", "agent");
-const targets = (process.env.PI_CONSOLE_TARGETS ?? "tango,alpha,bravo,kilo,lima,mike,oscar,quebec")
+const configuredTargets = (process.env.PI_CONSOLE_TARGETS ?? "tango")
   .split(",").map((value) => value.trim()).filter(Boolean);
+const primaryModelConfig = {
+  provider: process.env.PI_CONSOLE_PRIMARY_PROVIDER ?? "openai-codex",
+  id: process.env.PI_CONSOLE_PRIMARY_MODEL ?? "gpt-5.6-sol",
+  thinkingLevel: process.env.PI_CONSOLE_PRIMARY_THINKING ?? "medium",
+};
+const backupModelConfig = {
+  provider: process.env.PI_CONSOLE_BACKUP_PROVIDER ?? "openrouter",
+  id: process.env.PI_CONSOLE_BACKUP_MODEL ?? "moonshotai/kimi-k3",
+  thinkingLevel: process.env.PI_CONSOLE_BACKUP_THINKING ?? "medium",
+};
+const execFileAsync = promisify(execFile);
 const metadataPath = path.join(stateDir, "threads.json");
 const live = new Map();
 const listeners = new Map();
@@ -29,6 +42,19 @@ try {
   threads = JSON.parse(await readFile(metadataPath, "utf8"));
 } catch (error) {
   if (error.code !== "ENOENT") console.error("Could not read thread metadata:", error);
+}
+
+async function availableTargets() {
+  try {
+    const { stdout } = await execFileAsync("tailscale", ["status", "--json"], { timeout: 5000 });
+    const status = JSON.parse(stdout);
+    const peers = Object.values(status.Peer ?? {}).map((peer) => peer.HostName).filter(Boolean);
+    const self = status.Self?.HostName ? [status.Self.HostName] : [];
+    return [...new Set([...configuredTargets, ...self, ...peers])].sort();
+  } catch (error) {
+    console.warn("Could not discover Tailscale peers:", error.message);
+    return configuredTargets;
+  }
 }
 
 function saveThreads() {
@@ -69,7 +95,7 @@ function visibleMessages(session) {
   return session.messages.map((message, index) => ({
     id: message.id ?? String(index),
     role: message.role ?? "system",
-    text: contentText(message.content),
+    text: contentText(message.content) || message.errorMessage || "",
     timestamp: message.timestamp ?? null,
   })).filter((message) => message.text && ["user", "assistant", "toolResult"].includes(message.role));
 }
@@ -87,6 +113,43 @@ function systemPrompt(thread) {
   return `You are Pi Console, the coding and operations agent for a private NixOS homelab. ${remote}\nUse the repository's flake and deploy-rs configuration. Explain destructive actions before taking them, preserve secrets in 1Password, and never print secret values. Be concise and report commands, changed files, checks, and deployment results.`;
 }
 
+function configuredModel(modelRuntime, modelConfig) {
+  const model = modelRuntime.getModel(modelConfig.provider, modelConfig.id);
+  if (!model) throw new Error(`Pi model ${modelConfig.provider}/${modelConfig.id} is not registered`);
+  return { model, thinkingLevel: modelConfig.thinkingLevel };
+}
+
+function latestAssistantError(session) {
+  const message = [...session.messages].reverse().find((item) => item.role === "assistant");
+  return message?.errorMessage || null;
+}
+
+async function promptWithFallback(thread, runtime, message) {
+  try {
+    await runtime.session.prompt(message);
+    const error = latestAssistantError(runtime.session);
+    if (error) throw new Error(error);
+  } catch (error) {
+    if (runtime.abortRequested || runtime.session.model?.provider !== primaryModelConfig.provider
+      || runtime.session.model?.id !== primaryModelConfig.id) throw error;
+
+    const backup = configuredModel(runtime.modelRuntime, backupModelConfig);
+    if (!runtime.modelRuntime.hasConfiguredAuth(backup.model.provider)) throw error;
+    console.warn(`Thread ${thread.id}: primary model failed; switching to ${backup.model.provider}/${backup.model.id}`);
+    await runtime.session.setModel(backup.model);
+    runtime.session.setThinkingLevel(backup.thinkingLevel);
+    publish(thread.id, "model", {
+      provider: backup.model.provider,
+      model: backup.model.id,
+      thinkingLevel: backup.thinkingLevel,
+      fallback: true,
+    });
+    await runtime.session.prompt("Continue and complete the preceding user request using the conversation state. The primary model became unavailable; do not ask the user to repeat the request.");
+    const backupError = latestAssistantError(runtime.session);
+    if (backupError) throw new Error(backupError);
+  }
+}
+
 async function loadThread(thread) {
   if (live.has(thread.id)) return live.get(thread.id);
   const loader = new DefaultResourceLoader({
@@ -102,14 +165,25 @@ async function loadThread(thread) {
     authPath: path.join(agentDir, "auth.json"),
     modelsPath: path.join(agentDir, "models.json"),
   });
+  const primary = configuredModel(modelRuntime, primaryModelConfig);
+  const backup = configuredModel(modelRuntime, backupModelConfig);
+  const primaryHasAuth = modelRuntime.hasConfiguredAuth(primary.model.provider);
+  const backupHasAuth = modelRuntime.hasConfiguredAuth(backup.model.provider);
+  if (!primaryHasAuth && !backupHasAuth) {
+    throw new Error(`No authentication configured for ${primary.model.provider} or ${backup.model.provider}`);
+  }
+  const selected = primaryHasAuth ? primary : backup;
   const result = await createAgentSession({
     cwd: thread.cwd,
     agentDir,
+    model: selected.model,
+    thinkingLevel: selected.thinkingLevel,
+    scopedModels: [primary, backup],
     modelRuntime,
     resourceLoader: loader,
     sessionManager,
   });
-  const runtime = { ...result, modelRuntime, busy: false };
+  const runtime = { ...result, modelRuntime, busy: false, abortRequested: false };
   result.session.subscribe((event) => {
     if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
       publish(thread.id, "delta", { text: event.assistantMessageEvent.delta });
@@ -141,13 +215,14 @@ function publicThread(thread) {
 
 async function api(request, response, url) {
   if (request.method === "GET" && url.pathname === "/api/config") {
-    return send(response, 200, { targets, defaultCwd });
+    return send(response, 200, { targets: await availableTargets(), defaultCwd });
   }
   if (request.method === "GET" && url.pathname === "/api/threads") {
     return send(response, 200, threads.map(publicThread).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
   }
   if (request.method === "POST" && url.pathname === "/api/threads") {
     const input = await body(request);
+    const targets = await availableTargets();
     const target = targets.includes(input.target) ? input.target : "tango";
     const thread = {
       id: randomUUID(),
@@ -198,11 +273,12 @@ async function api(request, response, url) {
     if (!message) return send(response, 400, { error: "Message is required" });
     if (runtime.busy) return send(response, 409, { error: "Agent is already working" });
     runtime.busy = true;
+    runtime.abortRequested = false;
     thread.updatedAt = new Date().toISOString();
     await saveThreads();
     send(response, 202, { accepted: true });
     publish(thread.id, "status", { busy: true });
-    runtime.session.prompt(message).catch((error) => {
+    promptWithFallback(thread, runtime, message).catch((error) => {
       console.error(`Thread ${thread.id}:`, error);
       publish(thread.id, "error", { message: error.message });
     }).finally(async () => {
@@ -216,6 +292,7 @@ async function api(request, response, url) {
     return true;
   }
   if (request.method === "POST" && action === "abort") {
+    runtime.abortRequested = true;
     await runtime.session.abort();
     return send(response, 200, { aborted: true });
   }

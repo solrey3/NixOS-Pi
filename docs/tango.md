@@ -45,6 +45,8 @@ http://tango:3210
 
 Each UI thread is a persistent Pi session. The target selector teaches the session to use `budchris@<target>` over Tailscale SSH, while `/srv/nixos` is tango's writable fleet checkout. The UI supports streaming responses, tool activity, aborting work, thread deletion, and mobile layouts.
 
+The console uses `openai-codex/gpt-5.6-sol` at medium reasoning by default. If a run fails because the primary model is unavailable, it switches that thread to `openrouter/moonshotai/kimi-k3` at medium reasoning and continues the request from the existing conversation state.
+
 Inspect it with:
 
 ```sh
@@ -52,9 +54,20 @@ systemctl status pi-console
 journalctl -u pi-console -f
 ```
 
-## 1Password model secrets
+## Model authentication and 1Password secrets
 
-Create a 1Password service account with read-only access to the required API-key items. On tango, place its token and an `op run` environment template in the service state directory:
+Pi Console runs as the separate `pi-console` account and reads `/var/lib/pi-console/.pi/agent/auth.json`. If OpenAI Codex and OpenRouter were configured through Pi as `budchris`, seed the console account once without printing the credentials:
+
+```sh
+sudo install -D -o pi-console -g pi-console -m 0600 \
+  /home/budchris/.pi/agent/auth.json \
+  /var/lib/pi-console/.pi/agent/auth.json
+sudo systemctl restart pi-console
+```
+
+The copied file is then owned and refreshed independently by the service. Alternatively, authenticate while running Pi directly as the service account.
+
+For the OpenRouter API key, a 1Password service account can provide `OPENROUTER_API_KEY` at service startup. Place its token and an `op run` environment template in the service state directory:
 
 ```sh
 sudo install -o pi-console -g pi-console -m 0700 -d /var/lib/pi-console
@@ -73,7 +86,7 @@ sudo systemctl restart pi-console
 OP_SERVICE_ACCOUNT_TOKEN=<service-account-token>
 ```
 
-Keep only `op://...` references in `secrets.env.tpl`; never put resolved API keys in the repository. If these files are absent, Pi falls back to its normal `/var/lib/pi-console/.pi/agent/auth.json` credential discovery.
+Keep only `op://...` references in `secrets.env.tpl`; never put resolved API keys in the repository. OpenAI Codex OAuth remains in `/var/lib/pi-console/.pi/agent/auth.json`. If the 1Password files are absent, both providers use Pi's normal credential discovery from that file.
 
 ## Fleet deployment key
 
