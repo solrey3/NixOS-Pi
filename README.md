@@ -1,6 +1,6 @@
 # NixOS Flake
 
-A modular, multi-host NixOS configuration for desktop and laptop systems, a media server, and a three-node k3s cluster. It tracks `nixos-unstable`, integrates Home Manager, and automatically creates a NixOS configuration for every directory under `hosts/`.
+A modular, multi-host configuration for NixOS, nix-darwin, and standalone Home Manager systems, including desktops, laptops, a media server, and a three-node k3s cluster. It tracks `nixos-unstable` and integrates Home Manager.
 
 ## Repository layout
 
@@ -9,6 +9,15 @@ flake.nix                    Flake inputs and generated host outputs
 hosts/
   alpha/                     Appliance music player and MPD server
   bravo/                     Desktop and media server
+  charlie/                   2017 13-inch MacBook Pro running NixOS
+  delta/                     M2 MacBook Air managed by nix-darwin
+  echo/                      Raspberry Pi 5 standalone Home Manager profile
+  foxtrot/                   Early-2013 13-inch Retina MacBook Pro running NixOS
+  golf/                      Late-2011 15-inch MacBook Pro running NixOS
+  india/                     Steam Deck OLED running NixOS from SD card
+  juliet/                    M4 Mac mini managed by nix-darwin
+  november/                  A1347 Mac mini running NixOS
+  papa/                      Beelink SER5 MAX running NixOS
   oscar/                     Laptop/workstation
   quebec/                    Framework 13 laptop/workstation
   kilo/                      Bootstrap k3s control-plane node
@@ -36,11 +45,23 @@ Each host directory contains:
 | --- | --- | --- |
 | `alpha` | Appliance music player | i3/XFCE, MPD, NFS music library, Tailscale |
 | `bravo` | NVIDIA desktop and media server | Plasma, COSMIC, Sway, Docker, VPN tools, Jellyfin, Navidrome |
+| `charlie` | 2017 13-inch MacBook Pro (MacBookPro14,1), NixOS | Sway, laptop power management, Docker, Tailscale |
+| `delta` | 2022 M2 MacBook Air, macOS | nix-darwin and Home Manager; closed-clamshell external-display setup |
+| `echo` | Raspberry Pi 5 | Standalone aarch64-linux Home Manager profile |
+| `foxtrot` | Early-2013 13-inch Retina MacBook Pro (MacBookPro10,2), NixOS | XFCE/i3, laptop support, Docker, Tailscale |
+| `golf` | Late-2011 15-inch MacBook Pro (MacBookPro8,2), NixOS | i3/XFCE, laptop support, Docker, Tailscale |
+| `india` | Steam Deck OLED, NixOS on SD card | Plasma, Steam, laptop support, Docker, Tailscale |
+| `juliet` | 2024 M4 Mac mini, macOS | nix-darwin and Home Manager |
+| `november` | A1347 Mac mini, NixOS | XFCE/i3, Docker, Tailscale |
+| `papa` | Beelink SER5 MAX, NixOS | Sway, Steam, Docker, Tailscale |
 | `oscar` | Laptop/workstation | Plasma, COSMIC, Sway, laptop power management, Docker, VPN tools |
 | `quebec` | Framework 13 AMD laptop/workstation | Plasma, COSMIC, Sway, laptop power/audio configuration, Docker, VPN tools |
 | `kilo` | k3s bootstrap server and worker | Initializes the embedded-etcd cluster and deploys homelab manifests |
 | `lima` | k3s server and worker | Joins the control plane initialized by `kilo` |
 | `mike` | k3s server and worker | Joins the control plane initialized by `kilo` |
+| `tango` | Fleet command center | deploy-rs, Tailscale, 1Password CLI, and the threaded Pi Console web UI |
+
+Tango provisioning and command-console operations are documented in [docs/tango.md](docs/tango.md).
 
 ## Build and deploy
 
@@ -63,6 +84,21 @@ sudo nixos-rebuild switch --flake .#oscar
 sudo nixos-rebuild switch --flake .#bravo
 ```
 
+Apply a macOS host or Echo's standalone Home Manager profile:
+
+```sh
+sudo darwin-rebuild switch --flake .#delta
+sudo darwin-rebuild switch --flake .#juliet
+home-manager switch --flake .#echo
+```
+
+Deploy from tango over Tailscale with deploy-rs:
+
+```sh
+deploy .#bravo
+deploy .#kilo .#lima .#mike
+```
+
 For first-time setup after a plain NixOS installation, follow [docs/initial-flake-setup.md](docs/initial-flake-setup.md). The hardware configuration must be generated on the machine where it will be used:
 
 ```sh
@@ -70,7 +106,7 @@ sudo nixos-generate-config --show-hardware-config \
   > hosts/<hostname>/hardware-configuration.nix
 ```
 
-In particular, the checked-in `kilo`, `lima`, and `mike` hardware files are bootstrap placeholders and must be replaced before deployment.
+In particular, the checked-in `kilo`, `lima`, and `mike` hardware files are bootstrap placeholders and must be replaced before deployment. `foxtrot` was a Darwin host in the archived repository, so its NixOS hardware file contains clearly marked disk-label placeholders; replace it with hardware generated on foxtrot before the first switch.
 
 ## Add a host
 
@@ -156,4 +192,4 @@ nix fmt
 nix flake check
 ```
 
-The flake exports packages, formatter, and development shells for `x86_64-linux` and `aarch64-linux`; the current NixOS hosts use `x86_64-linux`.
+The flake exports packages, formatter, and development shells for `x86_64-linux` and `aarch64-linux`. NixOS hosts currently use `x86_64-linux`; Echo uses `aarch64-linux`, and Delta and Juliet use `aarch64-darwin`.

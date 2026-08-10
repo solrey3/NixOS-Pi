@@ -9,13 +9,28 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    darwin = {
+      url = "github:nix-darwin/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     lazyvim-starter = {
       url = "github:LazyVim/starter";
       flake = false;
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, darwin, deploy-rs, ... }:
     let
       lib = nixpkgs.lib;
 
@@ -23,8 +38,14 @@
       systems = [ "x86_64-linux" "aarch64-linux" ];
       forAllSystems = lib.genAttrs systems;
 
-      # Every directory under ./hosts becomes a NixOS host.
-      hostDirs = lib.filterAttrs (_: type: type == "directory") (builtins.readDir ./hosts);
+      # A host is discovered only when its two required entry points exist, so
+      # work-in-progress inventory directories do not break the whole flake.
+      hostDirs = lib.filterAttrs
+        (name: type:
+          type == "directory"
+          && builtins.pathExists ./hosts/${name}/default.nix
+          && builtins.pathExists ./hosts/${name}/system.nix)
+        (builtins.readDir ./hosts);
 
       mkHost = hostname: hostSystem:
         lib.nixosSystem {
@@ -40,11 +61,74 @@
             ./hosts/${hostname}
           ];
         };
+
+      mkDarwinHost = hostname: hostSystem:
+        darwin.lib.darwinSystem {
+          system = hostSystem;
+          specialArgs = {
+            inherit inputs self hostname;
+            username = "budchris";
+          };
+          modules = [
+            home-manager.darwinModules.home-manager
+            ./modules/darwin/nix-core.nix
+            ./modules/darwin/system.nix
+            ./modules/darwin/host-users.nix
+            ./hosts/${hostname}
+            ({ ... }: {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                backupFileExtension = "backup";
+                extraSpecialArgs = { inherit inputs; };
+                users.budchris = {
+                  imports = [ ./modules/home/budchris/portable.nix ];
+                  home = {
+                    username = "budchris";
+                    homeDirectory = "/Users/budchris";
+                    stateVersion = "24.11";
+                  };
+                };
+              };
+            })
+          ];
+        };
     in
     {
       nixosConfigurations = lib.mapAttrs
         (hostname: _: mkHost hostname (import ./hosts/${hostname}/system.nix))
         hostDirs;
+
+      darwinConfigurations = {
+        delta = mkDarwinHost "delta" "aarch64-darwin";
+        juliet = mkDarwinHost "juliet" "aarch64-darwin";
+      };
+
+      homeConfigurations.echo = home-manager.lib.homeManagerConfiguration {
+        pkgs = import nixpkgs {
+          system = "aarch64-linux";
+          config.allowUnfree = true;
+        };
+        extraSpecialArgs = { inherit inputs; };
+        modules = [ ./hosts/echo ];
+      };
+
+      # Tango deploys every host over Tailscale MagicDNS. Target hosts build
+      # their own closures so tango remains an orchestrator rather than a
+      # cross-machine build bottleneck.
+      deploy.nodes = lib.mapAttrs
+        (hostname: configuration: {
+          inherit hostname;
+          sshUser = "budchris";
+          remoteBuild = true;
+          profiles.system = {
+            user = "root";
+            path = deploy-rs.lib.${configuration.pkgs.system}.activate.nixos configuration;
+          };
+        })
+        self.nixosConfigurations;
+
+      checks.x86_64-linux = deploy-rs.lib.x86_64-linux.deployChecks self.deploy;
 
       overlays.default = import ./overlays;
 
