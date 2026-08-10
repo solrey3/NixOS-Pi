@@ -5,7 +5,7 @@ The three EQR5 hosts form an HA [k3s](https://k3s.io/) control plane:
 - `kilo`: initializes embedded etcd and deploys cluster manifests
 - `lima`, `mike`: join as control-plane/worker servers
 
-All three servers can run workloads. Jellyfin, Navidrome, and Pi-hole initially run on `kilo` because their default `local-path` volumes are node-local.
+All three servers can run workloads. Jellyfin, Navidrome, SABnzbd, Pi-hole, and an nginx homepage are deployed by `kilo`. Jellyfin, Navidrome, and Pi-hole are explicitly pinned to `kilo`; all stateful workloads use node-local `local-path` volumes initially.
 
 ## 1. Prepare host configuration
 
@@ -23,7 +23,7 @@ custom.k3sCluster.serverAddress = "https://192.168.1.10:6443";
 
 Also replace `kilo.local` in the `--tls-san` flag in `modules/nixos/k3s-cluster.nix`, or add the IP as another TLS SAN.
 
-The cluster mounts NFS exports from the NAS at hostname `illmatic` on every node. Ensure that name resolves from all three hosts and that the NAS exports `/Jukebox`, `/Movies`, `/TV`, and `/Sports` to them. Navidrome receives `/Jukebox`; Jellyfin receives all four paths read-only. The host mount points are under `/mnt/illmatic`.
+The cluster mounts NFS exports from the NAS at hostname `illmatic` on every node. Ensure that name resolves from all three hosts and that the NAS exports `/Jukebox`, `/Movies`, `/TV`, `/Downloads`, and `/Sports` to them. Navidrome receives `/Jukebox`, Jellyfin receives the media paths read-only, and SABnzbd writes to `/Downloads`. The host mount points are under `/mnt/illmatic`.
 
 ## 2. Bootstrap kilo
 
@@ -89,15 +89,17 @@ kubectl get services -A
 
 Default ports are:
 
+- nginx homelab homepage: `80`
 - Jellyfin: `8096`
 - Navidrome: `4533`
-- Pi-hole admin: `8080`
+- SABnzbd: `8080`
+- Pi-hole admin: `8081`
 - Pi-hole DNS: TCP/UDP `53`
 
 Point the router's LAN DNS setting at kilo's reserved address only after Pi-hole reports Ready. Keep a fallback/rescue DNS plan so a cluster outage does not lock you out of the network.
 
 ## Storage and availability notes
 
-The bundled workloads are a useful initial deployment, not fully HA storage. Their PVCs use k3s's local-path provisioner and the pods are pinned to kilo. Back up the application volumes under `/var/lib/rancher/k3s/storage` and the media source independently.
+The bundled workloads are a useful initial deployment, not fully HA storage. Their PVCs use k3s's local-path provisioner. Jellyfin, Navidrome, and Pi-hole are pinned to `kilo`; SABnzbd becomes tied to the node where its local-path volume is provisioned. Back up the application volumes under `/var/lib/rancher/k3s/storage` and the media source independently.
 
 For workload failover, install replicated storage (for example Longhorn) or use NAS-backed persistent volumes, then remove the `nodeSelector` entries from `kubernetes/homelab.yaml`. Pi-hole itself remains a single replica; a second independent DNS instance is recommended before making it the network's only resolver.

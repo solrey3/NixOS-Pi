@@ -1,4 +1,4 @@
-{ hostname, pkgs, ... }:
+{ config, hostname, pkgs, ... }:
 
 {
   imports = [
@@ -58,7 +58,7 @@
     powerManagement.enable = true;
     nvidiaSettings = true;
     open = false;
-    package = pkgs.linuxPackages.nvidiaPackages.stable;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
   custom.desktop = {
