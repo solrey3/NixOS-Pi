@@ -10,6 +10,7 @@
     nnn
     mc
     tmux
+    wl-clipboard
 
     # Search & navigation
     fzf
@@ -127,6 +128,18 @@
 
       # Enable mouse support
       set -g mouse on
+
+      # Clipboard integration for Wayland/Sway. OSC52 lets supporting terminals
+      # receive clipboard writes; copy-pipe is the reliable local Wayland path.
+      set -g set-clipboard on
+      set -g mode-keys vi
+      bind -T copy-mode-vi v send -X begin-selection
+      bind -T copy-mode-vi C-v send -X rectangle-toggle
+      bind -T copy-mode-vi y send -X copy-pipe-and-cancel "wl-copy"
+      bind -T copy-mode-vi Enter send -X copy-pipe-and-cancel "wl-copy"
+      bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-pipe-and-cancel "wl-copy"
+      bind -T copy-mode y send -X copy-pipe-and-cancel "wl-copy"
+      bind -T copy-mode Enter send -X copy-pipe-and-cancel "wl-copy"
 
       # Set escape time to reduce delay
       set -sg escape-time 0
