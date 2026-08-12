@@ -5,6 +5,7 @@
     ./ai.nix
     ./bash.nix
     ./git.nix
+    ./lazyvim.nix
     ./starship.nix
   ];
 
@@ -18,7 +19,6 @@
     fzf
     jq
     just
-    neovim
     openssh
     ripgrep
     rsync

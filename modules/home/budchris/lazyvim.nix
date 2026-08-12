@@ -1,27 +1,44 @@
 { inputs, pkgs, ... }:
 
 let
-  copilotLibraryPath = pkgs.lib.makeLibraryPath (with pkgs; [
-    glib
-    libei
-    libjpeg
-    libpng
-    libsecret
-    pipewire
-    stdenv.cc.cc.lib
-    libx11
-    libxtst
-  ]);
+  isLinux = pkgs.stdenv.hostPlatform.isLinux;
 
-  copilotNode = pkgs.writeShellScriptBin "copilot-node" ''
-    export LD_LIBRARY_PATH="${copilotLibraryPath}:''${LD_LIBRARY_PATH:-}"
-    exec ${pkgs.nodejs}/bin/node "$@"
-  '';
+  # Copilot's keytar module needs libraries that are not on NixOS' default
+  # dynamic linker path. macOS can use the regular Nixpkgs Node executable.
+  copilotNode =
+    if isLinux then
+      let
+        libraryPath = pkgs.lib.makeLibraryPath (with pkgs; [
+          glib
+          libei
+          libjpeg
+          libpng
+          libsecret
+          pipewire
+          stdenv.cc.cc.lib
+          libx11
+          libxtst
+        ]);
+      in
+      pkgs.writeShellScriptBin "copilot-node" ''
+        export LD_LIBRARY_PATH="${libraryPath}:''${LD_LIBRARY_PATH:-}"
+        exec ${pkgs.nodejs}/bin/node "$@"
+      ''
+    else
+      pkgs.nodejs;
+
+  copilotNodeCommand =
+    if isLinux
+    then "${copilotNode}/bin/copilot-node"
+    else "${copilotNode}/bin/node";
 
   nvimConfig = pkgs.runCommand "budchris-nvim-config" { } ''
     cp -r ${inputs.lazyvim-starter} $out
     chmod -R u+w $out
     mkdir -p $out/lua/plugins
+
+    # Keep personal keymaps in this repository rather than in mutable dotfiles.
+    cp ${./nvim/keymaps.lua} $out/lua/config/keymaps.lua
 
     cat > $out/lua/plugins/copilot-native-libs.lua <<'EOF'
     -- The native modules bundled with LazyVim's copilot.lua need shared
@@ -32,7 +49,7 @@ let
       {
         "zbirenbaum/copilot.lua",
         opts = function(_, opts)
-          opts.copilot_node_command = "${copilotNode}/bin/copilot-node"
+          opts.copilot_node_command = "${copilotNodeCommand}"
           return opts
         end,
       },
@@ -64,7 +81,7 @@ in
     VISUAL = "nvim";
   };
 
-  home.packages = with pkgs; [
+  home.packages = (with pkgs; [
     # LazyVim/runtime helpers
     gnumake
     copilotNode
@@ -72,8 +89,7 @@ in
     nodejs
     python3
     tree-sitter
-    wl-clipboard
-  ];
+  ]) ++ pkgs.lib.optionals isLinux [ pkgs.wl-clipboard ];
 
   programs.neovim = {
     enable = true;
@@ -92,7 +108,14 @@ in
     recursive = true;
   };
 
-  # Enable LazyVim's native Copilot extra.
+  # Pin the exact plugin revisions from the current configuration. Update this
+  # file intentionally after running :Lazy update in a writable checkout.
+  xdg.configFile."nvim/lazy-lock.json" = {
+    force = true;
+    source = ./nvim/lazy-lock.json;
+  };
+
+  # Enable LazyVim's native Copilot and Markdown extras.
   xdg.configFile."nvim/lazyvim.json" = {
     force = true;
     text = builtins.toJSON {
