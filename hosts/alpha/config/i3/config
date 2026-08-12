@@ -30,8 +30,9 @@ exec --no-startup-id dex --autostart --environment i3
 # session when the X screensaver kicks in was pausing media playback.
 #exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
-# Disable the X screensaver entirely; DPMS (display power off) still applies.
-exec --no-startup-id xset s off
+# Disable both the X screensaver and DPMS display sleep. Alpha uses HDMI/desktop
+# audio for MPD, so powering off the display can also drop the audio sink.
+exec_always --no-startup-id xset s off -dpms s noblank
 
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.

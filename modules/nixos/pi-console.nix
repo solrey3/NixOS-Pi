@@ -20,7 +20,10 @@ let
   '';
 in
 {
-  users.groups.pi-console = { };
+  users.groups = {
+    pi-console = { };
+    nixos-repo.members = [ "budchris" "pi-console" ];
+  };
   users.users.pi-console = {
     isSystemUser = true;
     group = "pi-console";
@@ -60,7 +63,8 @@ in
         cp -a --no-preserve=ownership ${self.outPath}/. /srv/nixos/
         chmod -R u+w /srv/nixos
       fi
-      chown -R pi-console:pi-console /srv/nixos
+      chown -R budchris:nixos-repo /srv/nixos
+      chmod -R u+rwX,g+rwX /srv/nixos
     '';
   };
 
@@ -82,8 +86,11 @@ in
       PI_CONSOLE_BACKUP_PROVIDER = "openrouter";
       PI_CONSOLE_BACKUP_MODEL = "moonshotai/kimi-k3";
       PI_CONSOLE_BACKUP_THINKING = "medium";
+      SHELL = "${pkgs.bash}/bin/sh";
     };
-    path = [ deploy pkgs.git pkgs.nix pkgs.openssh pkgs._1password-cli pkgs.tailscale ];
+    # Include explicit bin paths so API command runners that spawn plain `sh`
+    # can resolve it even in the service's restricted environment.
+    path = [ pkgs.bash pkgs.coreutils deploy pkgs.git pkgs.nix pkgs.openssh pkgs._1password-cli pkgs.tailscale ];
     serviceConfig = {
       User = "pi-console";
       Group = "pi-console";
@@ -93,7 +100,8 @@ in
       ExecStart = startPiConsole;
       Restart = "on-failure";
       RestartSec = 3;
-      UMask = "0077";
+      SupplementaryGroups = [ "nixos-repo" ];
+      UMask = "0007";
       NoNewPrivileges = true;
       PrivateTmp = true;
       ProtectSystem = "strict";
