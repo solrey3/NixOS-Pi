@@ -92,6 +92,8 @@ This flake installs the upstream default Sway config for `budchris`, with the te
 | `XF86AudioStop` | Stop media |
 | `XF86MonBrightnessDown` | Lower brightness 5% |
 | `XF86MonBrightnessUp` | Raise brightness 5% |
+| `Super + Ctrl + l` | Lock with Swaylock |
+| `XF86Sleep` | Suspend immediately |
 | `Print` | Take a screenshot with `grim` |
 
 ## Trackpad
@@ -110,9 +112,13 @@ Sway is configured to behave more like COSMIC/Plasma:
 - 3-finger up opens the launcher
 - 3-finger down shows the scratchpad
 
-## Display
+## Status, power, and display
 
-The built-in `eDP-1` panel uses native `2880x1920@120Hz` with `scale 1.5`, giving a `1920x1280` logical workspace.
+Waybar replaces swaybar and shows workspaces, network, Bluetooth, audio, power profile, battery, and a clock. Clicking the power-profile module cycles through power-saver, balanced, and performance. Laptops automatically use balanced on AC and power-saver on battery.
+
+Idle handling dims after 5 minutes, locks after 10, powers displays off after 15, and suspends after 30. On Quebec, idle suspend is skipped while connected to AC so MPD can continue playing; locking and display power-off still apply.
+
+The configured built-in `eDP-1` panel uses native `2880x1920@120Hz` with `scale 1.5`, giving a `1920x1280` logical workspace. Quebec also receives the repository-managed Wall-11-inspired wallpaper in Sway and Plasma and uses it on the lock screen.
 
 ## Config location
 
@@ -122,4 +128,4 @@ The generated Sway config is managed in:
 modules/home/budchris/sway.nix
 ```
 
-It reads Sway's default config and replaces the default terminal with Ghostty, replaces the click-based logout prompt with a keyboard confirmation mode, adds the trackpad profile, and swaps swaybar for Waybar.
+It reads Sway's default config and replaces the default terminal with Ghostty, replaces the click-based logout prompt with a keyboard confirmation mode, adds trackpad, laptop-key, power, idle, and lock behavior, and swaps swaybar for Waybar.

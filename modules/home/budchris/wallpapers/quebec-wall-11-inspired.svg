@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2560" width="3840" height="2560">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.46" stop-color="#203656"/>
+      <stop offset="1" stop-color="#d77a45"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="44%" r="44%">
+      <stop offset="0" stop-color="#ffcf8a" stop-opacity="0.9"/>
+      <stop offset="0.28" stop-color="#e45f4f" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#07111f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#18233a"/>
+      <stop offset="1" stop-color="#05080f"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect width="3840" height="2560" fill="url(#sky)"/>
+  <rect width="3840" height="2560" fill="url(#glow)"/>
+
+  <circle cx="1920" cy="1130" r="430" fill="#ffb25f" opacity="0.92"/>
+  <circle cx="1920" cy="1130" r="510" fill="none" stroke="#ffd08a" stroke-width="16" opacity="0.25"/>
+
+  <path d="M0 1540 C420 1360 620 1410 930 1280 C1240 1150 1440 1250 1660 1080 C1900 895 2200 1040 2440 920 C2820 730 3220 880 3840 620 L3840 2560 L0 2560 Z" fill="#111927" opacity="0.88"/>
+  <path d="M0 1660 C510 1480 820 1540 1190 1360 C1530 1195 1710 1330 2040 1170 C2460 965 2880 1140 3840 940 L3840 2560 L0 2560 Z" fill="#0a111c" opacity="0.94"/>
+  <path d="M0 1780 C360 1670 700 1700 1040 1600 C1500 1465 1760 1590 2130 1450 C2680 1240 3140 1380 3840 1210 L3840 2560 L0 2560 Z" fill="#05080f"/>
+
+  <rect y="1730" width="3840" height="830" fill="url(#water)" opacity="0.72"/>
+  <g opacity="0.58" filter="url(#soft)">
+    <path d="M760 1840 C1220 1810 1570 1810 1900 1840 C2260 1870 2580 1870 3100 1840" fill="none" stroke="#ff9a5c" stroke-width="18"/>
+    <path d="M920 1990 C1300 1965 1640 1970 1920 1995 C2240 2025 2540 2020 2940 1990" fill="none" stroke="#ffcb83" stroke-width="10"/>
+    <path d="M1120 2140 C1440 2120 1690 2125 1920 2145 C2170 2167 2420 2160 2720 2140" fill="none" stroke="#f06f4f" stroke-width="8"/>
+  </g>
+
+  <g opacity="0.42" fill="none" stroke="#f2b06d" stroke-width="3">
+    <path d="M420 680 C720 610 880 610 1180 680"/>
+    <path d="M2560 520 C2810 470 3000 475 3260 540"/>
+    <path d="M250 1040 C520 990 780 995 1040 1050"/>
+  </g>
+</svg>

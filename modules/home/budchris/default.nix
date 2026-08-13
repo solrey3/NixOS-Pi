@@ -13,6 +13,7 @@
     ./starship.nix
     ./sway.nix
     ./terminals.nix
+    ./wallpaper.nix
   ];
 
   home = {

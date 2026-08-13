@@ -30,8 +30,10 @@
     user = "budchris";
   };
 
-  # Alpha doubles as a music player: never suspend when the display
-  # turns off or after idle time, so audio playback keeps going.
+  # Alpha is an always-on music PC: never suspend/hibernate/idle-sleep,
+  # because HDMI/desktop audio drops when the machine or display goes to sleep.
+  powerManagement.enable = false;
+
   systemd.targets = {
     sleep.enable = false;
     suspend.enable = false;
@@ -39,12 +41,33 @@
     hybrid-sleep.enable = false;
   };
 
+  systemd.sleep.settings.Sleep = {
+    AllowSuspend = false;
+    AllowHibernation = false;
+    AllowHybridSleep = false;
+    AllowSuspendThenHibernate = false;
+  };
+
   services.logind.settings.Login = {
     HandleLidSwitch = "ignore";
     HandleLidSwitchExternalPower = "ignore";
     HandleLidSwitchDocked = "ignore";
     IdleAction = "ignore";
+    IdleActionSec = "infinity";
   };
+
+  # Disable X11 screen blanking/DPMS at the X server and display-manager levels
+  # too. i3 also enforces this after login in hosts/alpha/config/i3/config.
+  services.xserver.serverFlagsSection = ''
+    Option "BlankTime" "0"
+    Option "StandbyTime" "0"
+    Option "SuspendTime" "0"
+    Option "OffTime" "0"
+  '';
+
+  services.xserver.displayManager.setupCommands = ''
+    ${pkgs.xset}/bin/xset s off -dpms s noblank || true
+  '';
 
   # Keep PipeWire/WirePlumber from suspending idle audio nodes,
   # which can cut off music playback when the screen blanks.
@@ -83,6 +106,16 @@
   home-manager.users.budchris = { ... }: {
     # Manage the i3 config declaratively (Super is the modifier).
     xdg.configFile."i3/config".source = ./config/i3/config;
+
+    # xfce4-power-manager is pulled in by the XFCE desktop module and can be
+    # autostarted by dex in the i3 session. Override it so it cannot re-enable
+    # display sleep/suspend policies behind MPD's back.
+    xdg.configFile."autostart/xfce4-power-manager.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Power Manager
+      Hidden=true
+    '';
   };
 
   # Change this only after reading the NixOS release notes.

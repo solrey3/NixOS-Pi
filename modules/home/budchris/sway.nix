@@ -1,6 +1,9 @@
-{ pkgs, ... }:
+{ lib, pkgs, osConfig ? null, ... }:
 
 let
+  isQuebec = (osConfig.networking.hostName or "") == "quebec";
+  quebecWallpaper = ./wallpapers/quebec-wall-11-inspired.svg;
+
   swayLaptopPowerProfile = pkgs.writeShellScript "sway-laptop-power-profile" ''
     set -eu
 
@@ -54,32 +57,60 @@ let
     ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set "$next"
   '';
 
+  swayIdleSuspend = pkgs.writeShellScript "sway-idle-suspend" ''
+    # Quebec may turn its display off while playing music, but must not suspend
+    # on AC power. Preserve the normal idle suspend behavior on battery and on
+    # other hosts.
+    if ${lib.boolToString isQuebec}; then
+      for supply in /sys/class/power_supply/*; do
+        [ -r "$supply/type" ] || continue
+        [ -r "$supply/online" ] || continue
+        case "$(cat "$supply/type")" in
+          Mains|USB|USB_C|USB_PD)
+            [ "$(cat "$supply/online")" = "1" ] && exit 0
+            ;;
+        esac
+      done
+    fi
+    exec ${pkgs.systemd}/bin/systemctl suspend
+  '';
+
   swayStatusBar = ''
-bar {
-    position top
+    bar {
+        position top
 
-    # When the status_command prints a new line to stdout, swaybar updates.
-    # The default just shows the current date and time.
-    status_command while date +'%Y-%m-%d %X'; do sleep 1; done
+        # When the status_command prints a new line to stdout, swaybar updates.
+        # The default just shows the current date and time.
+        status_command while date +'%Y-%m-%d %X'; do sleep 1; done
 
-    colors {
-        statusline #ffffff
-        background #323232
-        inactive_workspace #32323200 #32323200 #5c5c5c
+        colors {
+            statusline #ffffff
+            background #323232
+            inactive_workspace #32323200 #32323200 #5c5c5c
+        }
     }
-}
-'';
+  '';
+
+  quebecSwayWallpaperAutostart = lib.optionalString isQuebec ''
+    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x swaybg || true; exec ${pkgs.swaybg}/bin/swaybg -i ${quebecWallpaper} -m fill'
+  '';
+
+  swayLock =
+    if isQuebec then
+      "${pkgs.swaylock}/bin/swaylock -f -i ${quebecWallpaper} -s fill"
+    else
+      "${pkgs.swaylock}/bin/swaylock -f -c 111111";
 
   swayAutostart = ''
-# Status bar and system tray. Waybar's tray hosts NetworkManager, Proton VPN,
-# Bluetooth, and other StatusNotifier/AppIndicator applications.
-exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x waybar || true; exec ${pkgs.waybar}/bin/waybar'
-exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x swayidle || true; exec ${pkgs.swayidle}/bin/swayidle -w timeout 300 "${pkgs.brightnessctl}/bin/brightnessctl -s set 10%" resume "${pkgs.brightnessctl}/bin/brightnessctl -r" timeout 600 "${pkgs.swaylock}/bin/swaylock -f -c 111111" timeout 900 "${pkgs.sway}/bin/swaymsg output * power off" resume "${pkgs.sway}/bin/swaymsg output * power on" timeout 1800 "${pkgs.systemd}/bin/systemctl suspend" before-sleep "${pkgs.swaylock}/bin/swaylock -f -c 111111" lock "${pkgs.swaylock}/bin/swaylock -f -c 111111"'
-exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -f "[s]way-laptop-power-profile" || true; exec ${swayLaptopPowerProfile} --watch'
-exec ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator
-exec ${pkgs.blueman}/bin/blueman-applet
-exec ${pkgs.proton-vpn}/bin/protonvpn-app --start-minimized
-'';
+    # Status bar and system tray. Waybar's tray hosts NetworkManager, Proton VPN,
+    # Bluetooth, and other StatusNotifier/AppIndicator applications.
+    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x waybar || true; exec ${pkgs.waybar}/bin/waybar'
+    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x swayidle || true; exec ${pkgs.swayidle}/bin/swayidle -w timeout 300 "${pkgs.brightnessctl}/bin/brightnessctl -s set 10%" resume "${pkgs.brightnessctl}/bin/brightnessctl -r" timeout 600 "${swayLock}" timeout 900 "${pkgs.sway}/bin/swaymsg output * power off" resume "${pkgs.sway}/bin/swaymsg output * power on" timeout 1800 "${swayIdleSuspend}" before-sleep "${swayLock}" lock "${swayLock}"'
+    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -f "[s]way-laptop-power-profile" || true; exec ${swayLaptopPowerProfile} --watch'
+    ${quebecSwayWallpaperAutostart}exec ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator
+    exec ${pkgs.blueman}/bin/blueman-applet
+    exec ${pkgs.proton-vpn}/bin/protonvpn-app --start-minimized
+  '';
 
   swayKeyboardLogout = ''
     set $mode_logout Log out? Enter = yes, Escape = no
@@ -89,7 +120,7 @@ exec ${pkgs.proton-vpn}/bin/protonvpn-app --start-minimized
         bindsym Return exec swaymsg exit, mode "default"
         bindsym Escape mode "default"
     }
-'';
+  '';
 
   swayDisplay = ''
 
@@ -142,7 +173,7 @@ bindsym XF86AudioMute exec ${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO
 bindsym XF86AudioLowerVolume exec ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
 bindsym XF86AudioRaiseVolume exec ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
 bindsym XF86AudioMicMute exec ${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
-bindsym $mod+Ctrl+l exec ${pkgs.swaylock}/bin/swaylock -f -c 111111
+bindsym $mod+Ctrl+l exec ${swayLock}
 bindsym XF86Sleep exec ${pkgs.systemd}/bin/systemctl suspend
 '';
 in

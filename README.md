@@ -26,18 +26,19 @@ hosts/
 modules/
   nixos/                     Shared NixOS services and host roles
     users/budchris.nix       User account and Home Manager integration
+  darwin/                    Shared nix-darwin settings and applications
   home/budchris/             Home Manager applications and dotfiles
-kubernetes/homelab.yaml      Jellyfin, Navidrome, and Pi-hole workloads
+apps/pi-console/             Threaded Pi SDK web application source
+kubernetes/homelab.yaml      Cluster media, DNS, and homepage workloads
 docs/                        Installation, desktop, and cluster guides
 overlays/                    Local nixpkgs overlay
-pkgs/                        Local package output
+pkgs/                        Local package outputs, including Pi Console
 ```
 
-Each host directory contains:
-
-- `default.nix`: host-specific imports and settings
-- `hardware-configuration.nix`: generated hardware, disk, and filesystem settings
-- `system.nix`: nixpkgs platform, currently `x86_64-linux` for every host
+NixOS host directories normally contain `default.nix`, a machine-generated
+`hardware-configuration.nix`, and `system.nix`. `tango` uses a declarative
+Disko layout instead of a generated hardware file. Darwin hosts contain their
+nix-darwin modules, while `echo` is a standalone Home Manager module.
 
 ## Hosts
 
@@ -106,7 +107,7 @@ sudo nixos-generate-config --show-hardware-config \
   > hosts/<hostname>/hardware-configuration.nix
 ```
 
-In particular, the checked-in `kilo`, `lima`, and `mike` hardware files are bootstrap placeholders and must be replaced before deployment. `foxtrot` was a Darwin host in the archived repository, so its NixOS hardware file contains clearly marked disk-label placeholders; replace it with hardware generated on foxtrot before the first switch.
+The checked-in `kilo`, `lima`, and `mike` files now contain their generated machine-specific disk UUIDs; do not reuse them on replacement hardware. `foxtrot` was a Darwin host in the archived repository, so its NixOS hardware file still contains clearly marked disk-label placeholders. Replace it with hardware generated on foxtrot before the first switch.
 
 ## Add a host
 
@@ -134,7 +135,7 @@ All hosts receive the common module, which configures:
 
 The desktop module supports Plasma 6, COSMIC, and Sway with SDDM. `bravo`, `oscar`, and `quebec` enable all three and default to Plasma. It also configures PipeWire, portals, printing, Firefox, Steam, and desktop keyring integration.
 
-The desktop hosts additionally enable 1Password, Docker, Tailscale, Proton VPN, and WireGuard tools. Nicotine+ and Transmission run in a dedicated network namespace that fails closed unless traffic can leave through Proton VPN's `proton0` interface.
+The primary workstations (`bravo`, `oscar`, and `quebec`) additionally enable 1Password, Docker, Tailscale, Proton VPN, and WireGuard tools. Nicotine+ and Transmission run in a dedicated network namespace that fails closed unless traffic can leave through Proton VPN's `proton0` interface. Other desktop hosts use smaller role-specific combinations of Docker and Tailscale.
 
 ## Home Manager
 
@@ -173,7 +174,7 @@ See [docs/k3s-cluster.md](docs/k3s-cluster.md) for hardware preparation, stable 
 - Jellyfin reads the mounted media drives and uses the NVIDIA GPU for transcoding.
 - Navidrome reads music and playlists from `/mnt/archive`.
 
-SABnzbd runs in the k3s cluster and writes downloads to the NAS-backed `/mnt/illmatic/Downloads` mount. Configure its provider credentials through the SABnzbd web interface; do not commit them to this repository.
+SABnzbd runs in the k3s cluster and writes downloads to the NAS-backed `/mnt/illmatic/Downloads` mount. Configure its provider credentials through the SABnzbd web interface, retain a recovery copy in 1Password, and do not commit them to this repository.
 
 `reorganize_tv_for_jellyfin.py` migrates top-level TV release folders into Jellyfin's `Series/Season NN` layout. It performs a dry run unless passed `--apply`.
 

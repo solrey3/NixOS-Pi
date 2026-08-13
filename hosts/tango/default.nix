@@ -79,6 +79,7 @@
   ];
 
   environment.systemPackages = with pkgs; [
+    fastfetch
     git
     jq
     tmux

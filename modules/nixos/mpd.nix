@@ -6,7 +6,9 @@
 
   boot.supportedFilesystems = [ "nfs" ];
   fileSystems."/mnt/illmatic/Jukebox" = {
-    device = "illmatic:/volume1/Jukebox";
+    # Use the LAN address: the NAS export permits 192.168.1.0/24, while
+    # Tailscale MagicDNS resolves bare "illmatic" to an unpermitted 100.x IP.
+    device = "illmatic.local:/volume1/Jukebox";
     fsType = "nfs";
     # No idle-timeout: unmounting/remounting mid-playback caused stalls.
     options = [ "_netdev" "nofail" "x-systemd.automount" ];
@@ -21,6 +23,7 @@
     user = "root";
     settings = {
       music_directory = "/mnt/illmatic/Jukebox/Music";
+      playlist_directory = "/mnt/illmatic/Jukebox/Playlists";
       bind_to_address = "any";
       port = 6600;
       audio_output = [

@@ -25,17 +25,15 @@ Replace `<repo-url>` with the actual Git remote URL for this repo.
 
 If this machine already has a matching host in `hosts/`, use that host name.
 
-Existing hosts:
+Existing NixOS hosts:
 
-- `alpha`
-- `bravo`
-- `kilo`
-- `lima`
-- `mike`
-- `oscar`
-- `quebec`
+- desktops and laptops: `alpha`, `bravo`, `charlie`, `foxtrot`, `golf`, `india`, `november`, `oscar`, `papa`, `quebec`
+- k3s nodes: `kilo`, `lima`, `mike`
+- fleet console: `tango`
 
-If this is a new machine, create a new host from an existing one:
+`delta` and `juliet` are nix-darwin hosts, and `echo` is a standalone Home Manager profile. Tango is installed with Disko and nixos-anywhere as documented in [tango.md](tango.md), not with this generic procedure. Foxtrot's checked-in hardware file is only an evaluation-safe placeholder and must be regenerated on foxtrot before activation.
+
+If this is a new conventional x86_64 NixOS machine, create a new host from an existing one:
 
 ```sh
 mkdir -p hosts/<hostname>
@@ -43,7 +41,7 @@ printf '"x86_64-linux"\n' > hosts/<hostname>/system.nix
 cp hosts/oscar/default.nix hosts/<hostname>/default.nix
 ```
 
-Then edit `hosts/<hostname>/default.nix` for machine-specific settings such as host name, desktop options, users, and services.
+Then edit `hosts/<hostname>/default.nix` for machine-specific imports, desktop options, users, and services. The flake passes the directory name as `hostname`, so follow the existing `networking.hostName = hostname;` pattern rather than hard-coding it.
 
 ## 4. Import the generated hardware configuration
 
