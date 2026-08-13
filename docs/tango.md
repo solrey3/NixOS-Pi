@@ -113,7 +113,7 @@ sudo -u pi-console ssh -o StrictHostKeyChecking=accept-new budchris@bravo hostna
 
 ## deploy-rs
 
-All flake hosts are deploy-rs nodes with Tailscale hostnames. Builds run on targets:
+Every generated NixOS configuration is a deploy-rs node with its Tailscale hostname. Darwin and standalone Home Manager outputs are not deploy-rs nodes. Builds run on targets:
 
 ```sh
 deploy .#bravo
@@ -123,4 +123,4 @@ deploy .#kilo .#lima .#mike
 deploy                       # entire fleet; use deliberately
 ```
 
-The target `budchris` user is trusted by Nix and has passwordless sudo through the shared user module. Avoid deploying placeholder k3s hardware configurations until they have been replaced as described in `docs/k3s-cluster.md`.
+The target `budchris` user is trusted by Nix and has passwordless sudo through the shared user module. The k3s hardware files are machine-specific and must be regenerated after a reinstall or hardware replacement, as described in `docs/k3s-cluster.md`. Foxtrot's hardware file remains a placeholder and must not be activated as-is.
