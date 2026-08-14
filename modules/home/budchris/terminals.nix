@@ -46,7 +46,7 @@ in
   xdg.configFile."ghostty/config".text = ''
     theme = Adwaita Dark
     font-family = ${terminalFont}
-    font-size = 10
+    font-size = 9
     # Slight transparency keeps text readable while letting the wallpaper show.
     background-opacity = 0.80
     gtk-titlebar = false
