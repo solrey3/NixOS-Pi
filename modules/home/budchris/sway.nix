@@ -3,7 +3,6 @@
 let
   isQuebec = (osConfig.networking.hostName or "") == "quebec";
   quebecWallpaper = ./wallpapers/quebec-wall-11-inspired.svg;
-  swayWallpaper = ../../../assets/wallpapers/air-23.png;
 
   swayLaptopPowerProfile = pkgs.writeShellScript "sway-laptop-power-profile" ''
     set -eu
@@ -134,11 +133,10 @@ let
 
   swayDisplay = ''
 
-### Displays and wallpaper
+### Built-in display density
 # Native 2880x1920 panel at 1.75x gives an approximately 1646x1097 logical workspace
 # instead of the default 2x-scaled 1440x960 workspace.
 output eDP-1 mode 2880x1920@120Hz scale 1.75
-${lib.optionalString (!isQuebec) "output * bg ${swayWallpaper} fill"}
 '';
 
   swayTrackpad = ''

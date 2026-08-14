@@ -118,7 +118,7 @@ Waybar replaces swaybar and shows workspaces, network, Bluetooth, audio, power p
 
 Idle handling dims after 5 minutes, locks after 10, powers displays off after 15, and suspends after 30. On Quebec, idle suspend is skipped while connected to AC so MPD can continue playing; locking and display power-off still apply.
 
-The built-in `eDP-1` panel uses native `2880x1920@120Hz` with `scale 1.75`, giving an approximately `1646x1097` logical workspace. GTK/GDK applications inherit this fractional scale from Wayland/Sway. Quebec also receives the repository-managed Wall-11-inspired wallpaper in Sway and Plasma and uses it on the lock screen. Other hosts use the `air-23` wallpaper.
+The built-in `eDP-1` panel uses native `2880x1920@120Hz` with `scale 1.75`, giving an approximately `1646x1097` logical workspace. GTK/GDK applications inherit this fractional scale from Wayland/Sway. Quebec also receives the repository-managed Wall-11-inspired wallpaper in Sway and Plasma and uses it on the lock screen.
 
 ## Config location
 
