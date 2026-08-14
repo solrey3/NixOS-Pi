@@ -46,7 +46,9 @@ in
   xdg.configFile."ghostty/config".text = ''
     theme = Adwaita Dark
     font-family = ${terminalFont}
-    font-size = 10
+    font-size = 8
+    # Slight transparency keeps text readable while letting the wallpaper show.
+    background-opacity = 0.90
     gtk-titlebar = false
     confirm-close-surface = false
     # Use a widely available TERM so tmux also works on remote hosts that do

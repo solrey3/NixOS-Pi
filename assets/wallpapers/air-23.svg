@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2880" height="1920" viewBox="0 0 2880 1920">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050505"/>
+      <stop offset="0.55" stop-color="#171717"/>
+      <stop offset="1" stop-color="#080808"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="38%" r="52%">
+      <stop offset="0" stop-color="#ce1126" stop-opacity=".46"/>
+      <stop offset=".48" stop-color="#8b0b1a" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f02a3f"/>
+      <stop offset="1" stop-color="#9e0b1c"/>
+    </linearGradient>
+    <pattern id="grain" width="180" height="180" patternUnits="userSpaceOnUse">
+      <circle cx="14" cy="20" r="1" fill="#fff" opacity=".05"/>
+      <circle cx="95" cy="61" r="1.5" fill="#fff" opacity=".035"/>
+      <circle cx="157" cy="133" r="1" fill="#fff" opacity=".04"/>
+      <circle cx="55" cy="151" r="1" fill="#fff" opacity=".03"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+  </defs>
+
+  <rect width="2880" height="1920" fill="url(#bg)"/>
+  <rect width="2880" height="1920" fill="url(#glow)"/>
+  <path d="M0 1540 L2880 580 L2880 720 L0 1680Z" fill="#ce1126" opacity=".07"/>
+  <path d="M0 1700 L2880 740" stroke="#ce1126" stroke-width="4" opacity=".32"/>
+  <path d="M0 1775 L2880 815" stroke="#fff" stroke-width="2" opacity=".12"/>
+
+  <!-- Subtle basketball-court geometry -->
+  <g fill="none" stroke="#fff" opacity=".055" stroke-width="5">
+    <circle cx="1440" cy="1965" r="525"/>
+    <circle cx="1440" cy="1965" r="250"/>
+    <path d="M0 1800 H2880 M420 1920 V1370 H2460 V1920"/>
+  </g>
+
+  <!-- Graphic number treatment -->
+  <g font-family="DejaVu Sans, sans-serif" font-weight="900" font-style="italic">
+    <text x="150" y="630" font-size="620" fill="none" stroke="#fff" stroke-width="7" opacity=".045">23</text>
+    <text x="145" y="615" font-size="620" fill="url(#red)" opacity=".14">23</text>
+    <text x="180" y="780" font-size="74" letter-spacing="30" fill="#fff" opacity=".55">FLY BEYOND</text>
+    <rect x="180" y="825" width="620" height="9" rx="4" fill="#ce1126"/>
+  </g>
+
+  <!-- Original airborne basketball silhouette -->
+  <g transform="translate(1850 235) rotate(-8 430 650)">
+    <ellipse cx="455" cy="1490" rx="390" ry="62" fill="#000" opacity=".55" filter="url(#shadow)"/>
+    <!-- trailing leg -->
+    <path d="M430 910 C365 1010 260 1125 150 1245 C112 1288 72 1350 92 1380 C115 1414 168 1380 213 1348 C350 1250 493 1132 570 1025Z" fill="#030303"/>
+    <!-- lead leg and shoe -->
+    <path d="M550 940 C640 1048 734 1172 790 1300 C813 1350 810 1405 850 1419 C896 1435 932 1396 919 1342 C890 1196 813 1009 710 852Z" fill="#030303"/>
+    <path d="M782 1370 C820 1360 883 1370 933 1407 C958 1426 952 1454 914 1460 L782 1443 C754 1435 752 1386 782 1370Z" fill="#ce1126"/>
+    <path d="M80 1340 C113 1327 166 1330 218 1354 C250 1369 252 1398 215 1411 L87 1410 C51 1402 49 1358 80 1340Z" fill="#ce1126"/>
+    <!-- torso / jersey -->
+    <path d="M410 445 C485 400 608 414 673 486 C729 548 724 669 708 785 C697 864 735 924 768 977 C672 1030 514 1041 407 970 C446 885 443 802 390 717 C344 642 349 510 410 445Z" fill="#050505"/>
+    <path d="M420 466 C492 430 596 438 648 498 L674 662 C590 691 477 680 399 635 C385 562 387 500 420 466Z" fill="#ce1126" opacity=".92"/>
+    <text x="475" y="615" font-family="DejaVu Sans, sans-serif" font-size="130" font-weight="900" font-style="italic" fill="#fff">23</text>
+    <!-- head -->
+    <circle cx="505" cy="329" r="108" fill="#030303"/>
+    <path d="M471 412 C470 444 449 478 427 497 L575 498 C547 466 541 425 546 397Z" fill="#030303"/>
+    <!-- arm toward ball -->
+    <path d="M416 492 C323 470 251 394 181 297 C153 258 115 200 77 219 C38 239 65 295 91 337 C175 470 278 602 405 630Z" fill="#030303"/>
+    <path d="M90 250 C58 203 43 159 61 138 C83 113 109 143 124 171 L151 229Z" fill="#030303"/>
+    <!-- raised dunking arm -->
+    <path d="M635 493 C708 445 768 348 821 238 C844 190 873 139 906 154 C943 172 920 232 900 277 C847 399 781 549 680 623Z" fill="#030303"/>
+    <path d="M887 183 C886 128 898 73 930 57 C958 43 971 73 958 105 L944 180Z" fill="#030303"/>
+    <!-- ball -->
+    <circle cx="965" cy="50" r="113" fill="url(#red)"/>
+    <g fill="none" stroke="#270207" stroke-width="10" opacity=".75">
+      <path d="M853 45 H1077 M963 -63 V163"/>
+      <path d="M884 -19 C949 1 992 58 1046 118 M885 119 C932 62 986 18 1045 -20"/>
+    </g>
+  </g>
+
+  <g font-family="DejaVu Sans, sans-serif" text-anchor="end">
+    <text x="2700" y="1710" font-size="38" font-weight="700" letter-spacing="14" fill="#fff" opacity=".6">RISE ABOVE</text>
+    <text x="2700" y="1780" font-size="24" letter-spacing="8" fill="#ce1126">CHICAGO · 23</text>
+  </g>
+  <rect width="2880" height="1920" fill="url(#grain)"/>
+</svg>

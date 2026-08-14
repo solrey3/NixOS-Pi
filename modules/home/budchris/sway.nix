@@ -3,6 +3,7 @@
 let
   isQuebec = (osConfig.networking.hostName or "") == "quebec";
   quebecWallpaper = ./wallpapers/quebec-wall-11-inspired.svg;
+  swayWallpaper = ../../../assets/wallpapers/air-23.png;
 
   swayLaptopPowerProfile = pkgs.writeShellScript "sway-laptop-power-profile" ''
     set -eu
@@ -75,6 +76,15 @@ let
     exec ${pkgs.systemd}/bin/systemctl suspend
   '';
 
+  swayWaybarToggle = pkgs.writeShellScript "sway-waybar-toggle" ''
+    waybar_pattern='^${pkgs.waybar}/bin/waybar([[:space:]]|$)'
+    if ${pkgs.procps}/bin/pgrep -f "$waybar_pattern" >/dev/null; then
+      exec ${pkgs.procps}/bin/pkill -f "$waybar_pattern"
+    else
+      exec ${pkgs.waybar}/bin/waybar
+    fi
+  '';
+
   swayStatusBar = ''
     bar {
         position top
@@ -104,7 +114,7 @@ let
   swayAutostart = ''
     # Status bar and system tray. Waybar's tray hosts NetworkManager, Proton VPN,
     # Bluetooth, and other StatusNotifier/AppIndicator applications.
-    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x waybar || true; exec ${pkgs.waybar}/bin/waybar'
+    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -f "^${pkgs.waybar}/bin/waybar([[:space:]]|$)" || true; exec ${pkgs.waybar}/bin/waybar'
     exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x swayidle || true; exec ${pkgs.swayidle}/bin/swayidle -w timeout 300 "${pkgs.brightnessctl}/bin/brightnessctl -s set 10%" resume "${pkgs.brightnessctl}/bin/brightnessctl -r" timeout 600 "${swayLock}" timeout 900 "${pkgs.sway}/bin/swaymsg output * power off" resume "${pkgs.sway}/bin/swaymsg output * power on" timeout 1800 "${swayIdleSuspend}" before-sleep "${swayLock}" lock "${swayLock}"'
     exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -f "[s]way-laptop-power-profile" || true; exec ${swayLaptopPowerProfile} --watch'
     ${quebecSwayWallpaperAutostart}exec ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator
@@ -124,10 +134,11 @@ let
 
   swayDisplay = ''
 
-### Built-in display density
-# Native 2880x1920 panel at 1.5x gives a 1920x1280 logical workspace
+### Displays and wallpaper
+# Native 2880x1920 panel at 1.75x gives an approximately 1646x1097 logical workspace
 # instead of the default 2x-scaled 1440x960 workspace.
-output eDP-1 mode 2880x1920@120Hz scale 1.5
+output eDP-1 mode 2880x1920@120Hz scale 1.75
+${lib.optionalString (!isQuebec) "output * bg ${swayWallpaper} fill"}
 '';
 
   swayTrackpad = ''
@@ -189,11 +200,13 @@ in
     [
       "set $term foot"
       "bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'"
+      "bindsym $mod+Shift+c reload"
       swayStatusBar
     ]
     [
       "set $term ${pkgs.ghostty}/bin/ghostty${swayDisplay}${swayTrackpad}${swayLaptopKeys}"
       swayKeyboardLogout
+      "bindsym $mod+Shift+c exec ${swayWaybarToggle}"
       swayAutostart
     ]
     (builtins.readFile "${pkgs.sway-unwrapped}/etc/sway/config");
@@ -212,31 +225,31 @@ in
         "spacing": 10
       },
       "network": {
-        "format-wifi": "  {essid} ({signalStrength}%)",
+        "format-wifi": "  {essid} ({signalStrength}%)",
         "format-ethernet": "󰈀  {ipaddr}/{cidr}",
         "format-disconnected": "󰖪  disconnected",
         "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
         "on-click": "${pkgs.networkmanagerapplet}/bin/nm-connection-editor"
       },
       "bluetooth": {
-        "format": " {status}",
-        "format-connected": " {device_alias}",
-        "format-disabled": " disabled",
-        "format-off": " off",
+        "format": " {status}",
+        "format-connected": " {device_alias}",
+        "format-disabled": " disabled",
+        "format-off": " off",
         "on-click": "${pkgs.blueman}/bin/blueman-manager"
       },
       "pulseaudio": {
-        "format": "  {volume}%",
-        "format-muted": "  muted",
+        "format": "  {volume}%",
+        "format-muted": "  muted",
         "on-click": "${pkgs.pavucontrol}/bin/pavucontrol"
       },
       "power-profiles-daemon": {
         "format": "{icon} {profile}",
         "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
         "format-icons": {
-          "performance": "",
-          "balanced": "",
-          "power-saver": ""
+          "performance": "",
+          "balanced": "",
+          "power-saver": ""
         },
         "on-click": "${swayPowerProfileCycle}"
       },
