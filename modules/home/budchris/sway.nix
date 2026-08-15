@@ -75,6 +75,10 @@ let
     exec ${pkgs.systemd}/bin/systemctl suspend
   '';
 
+  swayWaybarToggle = pkgs.writeShellScript "sway-waybar-toggle" ''
+    ${pkgs.procps}/bin/pkill -x waybar || exec ${pkgs.waybar}/bin/waybar
+  '';
+
   swayStatusBar = ''
     bar {
         position top
@@ -189,11 +193,13 @@ in
     [
       "set $term foot"
       "bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'"
+      "bindsym $mod+Shift+c reload"
       swayStatusBar
     ]
     [
       "set $term ${pkgs.ghostty}/bin/ghostty${swayDisplay}${swayTrackpad}${swayLaptopKeys}"
       swayKeyboardLogout
+      "bindsym $mod+Shift+c exec ${swayWaybarToggle}"
       swayAutostart
     ]
     (builtins.readFile "${pkgs.sway-unwrapped}/etc/sway/config");
@@ -212,31 +218,31 @@ in
         "spacing": 10
       },
       "network": {
-        "format-wifi": "  {essid} ({signalStrength}%)",
+        "format-wifi": "  {essid} ({signalStrength}%)",
         "format-ethernet": "󰈀  {ipaddr}/{cidr}",
         "format-disconnected": "󰖪  disconnected",
         "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
         "on-click": "${pkgs.networkmanagerapplet}/bin/nm-connection-editor"
       },
       "bluetooth": {
-        "format": " {status}",
-        "format-connected": " {device_alias}",
-        "format-disabled": " disabled",
-        "format-off": " off",
+        "format": " {status}",
+        "format-connected": " {device_alias}",
+        "format-disabled": " disabled",
+        "format-off": " off",
         "on-click": "${pkgs.blueman}/bin/blueman-manager"
       },
       "pulseaudio": {
-        "format": "  {volume}%",
-        "format-muted": "  muted",
+        "format": "  {volume}%",
+        "format-muted": "  muted",
         "on-click": "${pkgs.pavucontrol}/bin/pavucontrol"
       },
       "power-profiles-daemon": {
         "format": "{icon} {profile}",
         "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
         "format-icons": {
-          "performance": "",
-          "balanced": "",
-          "power-saver": ""
+          "performance": "",
+          "balanced": "",
+          "power-saver": ""
         },
         "on-click": "${swayPowerProfileCycle}"
       },

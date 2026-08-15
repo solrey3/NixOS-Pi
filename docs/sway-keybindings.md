@@ -18,7 +18,7 @@ This flake installs the upstream default Sway config for `budchris`, with the te
 | `Super + Enter` | Open Ghostty terminal |
 | `Super + d` | Open app launcher (`wmenu-run`) |
 | `Super + Shift + q` | Kill focused window |
-| `Super + Shift + c` | Reload Sway config |
+| `Super + Shift + c` | Toggle Waybar off/on |
 | `Super + Shift + e`, then `Enter` | Exit Sway session with keyboard confirmation |
 | `Super + Shift + e`, then `Escape` | Cancel logout confirmation |
 | `Super + Left Mouse` | Drag floating windows |
@@ -118,7 +118,7 @@ Waybar replaces swaybar and shows workspaces, network, Bluetooth, audio, power p
 
 Idle handling dims after 5 minutes, locks after 10, powers displays off after 15, and suspends after 30. On Quebec, idle suspend is skipped while connected to AC so MPD can continue playing; locking and display power-off still apply.
 
-The configured built-in `eDP-1` panel uses native `2880x1920@120Hz` with `scale 1.5`, giving a `1920x1280` logical workspace. Quebec also receives the repository-managed Wall-11-inspired wallpaper in Sway and Plasma and uses it on the lock screen.
+The built-in `eDP-1` panel uses native `2880x1920@120Hz` with `scale 1.5`, giving a `1920x1280` logical workspace. Quebec also receives the repository-managed Wall-11-inspired wallpaper in Sway and Plasma and uses it on the lock screen.
 
 ## Config location
 
