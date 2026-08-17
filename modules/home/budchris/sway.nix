@@ -76,7 +76,7 @@ let
   '';
 
   swayWaybarToggle = pkgs.writeShellScript "sway-waybar-toggle" ''
-    ${pkgs.procps}/bin/pkill -x waybar || exec ${pkgs.waybar}/bin/waybar
+    ${pkgs.procps}/bin/pkill waybar || exec ${pkgs.waybar}/bin/waybar
   '';
 
   swayStatusBar = ''
@@ -117,7 +117,7 @@ let
   '' + ''
     # Status bar and system tray. Waybar's tray hosts NetworkManager, Proton VPN,
     # Bluetooth, and other StatusNotifier/AppIndicator applications.
-    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x waybar || true; exec ${pkgs.waybar}/bin/waybar'
+    exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill waybar || true; exec ${pkgs.waybar}/bin/waybar'
     exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x swayidle || true; exec ${pkgs.swayidle}/bin/swayidle -w timeout 300 "${pkgs.brightnessctl}/bin/brightnessctl -s set 10%" resume "${pkgs.brightnessctl}/bin/brightnessctl -r" timeout 600 "${swayLock}" timeout 900 "${pkgs.sway}/bin/swaymsg output * power off" resume "${pkgs.sway}/bin/swaymsg output * power on" timeout 1800 "${swayIdleSuspend}" before-sleep "${swayLock}" lock "${swayLock}"'
     exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -f "[s]way-laptop-power-profile" || true; exec ${swayLaptopPowerProfile} --watch'
     ${quebecSwayWallpaperAutostart}exec ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator
