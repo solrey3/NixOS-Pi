@@ -106,6 +106,15 @@ let
       "${pkgs.swaylock}/bin/swaylock -f -c 111111";
 
   swayAutostart = ''
+    # Export Wayland/Sway environment variables into the D-Bus session and
+    # systemd user manager so that services (including gnome-keyring's
+    # secrets component) can locate the Wayland display.
+    exec ${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway
+    # Start the GNOME Keyring daemon. PAM (via sddm.enableGnomeKeyring)
+    # already unlocks the keyring at login; this just ensures the daemon
+    # is running so libsecret clients (Cursor, browsers, …) can connect.
+    exec ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh
+  '' + ''
     # Status bar and system tray. Waybar's tray hosts NetworkManager, Proton VPN,
     # Bluetooth, and other StatusNotifier/AppIndicator applications.
     exec_always ${pkgs.runtimeShell} -lc '${pkgs.procps}/bin/pkill -x waybar || true; exec ${pkgs.waybar}/bin/waybar'
