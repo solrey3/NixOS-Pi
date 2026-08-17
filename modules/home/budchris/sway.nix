@@ -191,6 +191,11 @@ bindsym XF86Sleep exec ${pkgs.systemd}/bin/systemctl suspend
 '';
 in
 {
+  home.sessionVariables = {
+    # Scale GTK apps 1.5× for better readability on this display.
+    GDK_SCALE = "1.5";
+  };
+
   home.packages = with pkgs; [
     blueman
     networkmanagerapplet
