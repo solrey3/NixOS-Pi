@@ -1,18 +1,23 @@
 { pkgs, ... }:
 
 let
-  # Wrap Cursor so it always uses the GNOME libsecret keyring backend.
-  # Without this flag Electron falls back to a plain-text store or prompts
-  # for kwallet / a missing GNOME session keyring on a bare Sway session.
-  cursor = pkgs.symlinkJoin {
-    name = "cursor";
-    paths = [ pkgs.code-cursor ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postBuild = ''
-      wrapProgram $out/bin/cursor \
-        --add-flags "--password-store=gnome-libsecret"
-    '';
-  };
+  # Pick the Electron password-store backend at runtime based on the active
+  # desktop so the same wrapper works correctly in both KDE Plasma (kwallet6)
+  # and Sway / non-KDE sessions (gnome-libsecret).
+  #
+  # KDE Plasma: kwalletd6 owns org.freedesktop.secrets and is unlocked at
+  #   login via SDDM's PAM kwallet module.  Using kwallet6 talks to it
+  #   directly, bypassing libsecret and any gnome-keyring race.
+  #
+  # Sway / other: gnome-keyring is started in the Sway autostart and is the
+  #   sole org.freedesktop.secrets provider.  gnome-libsecret works cleanly.
+  cursor = pkgs.writeShellScriptBin "cursor" ''
+    case "''${XDG_CURRENT_DESKTOP:-}" in
+      KDE|*KDE*) store=kwallet6        ;;
+      *)         store=gnome-libsecret ;;
+    esac
+    exec ${pkgs.code-cursor}/bin/cursor --password-store="$store" "$@"
+  '';
 in
 {
   home.packages = [ cursor ];
